@@ -1,23 +1,21 @@
 /*!
-    \author Kozulin Ilya
-    \warning tests needed; generating .html, .md and .pdf still not implemented
+    @author Kozulin Ilya
 */
 
 #include "Tokenizer.h"
 
-std::vector<std::string> keywords = {"alignas", "alignof", "__asm", "break", "case", "catch", "class", "concept", "const", "constexpr", "consteval",
-                                     "constinit", "continue", "const_case", "co_await", "co_return", "co_yield", "decltype", "default", "delete",
-                                     "do", "dynamic_cast", "else", "enum", "explicit", "export", "extern", "false", "for", "friend", "goto", "if",
-                                     "inline", "mutable", "namespace", "new", "noexcept", "operator", "private", "public", "protected", "register",
-                                     "reinterpret_cast", "requires", "return", "sizeof", "static", "static_assert", "static_cast", "struct", "switch",
-                                     "template", "typename", "this", "thread_local", "throw", "true", "try", "typedef", "typeid", "using", "union",
-                                     "virtual", "override", "while"};
+const std::vector<std::string> keywords = {"alignas", "alignof", "__asm", "break", "case", "catch", "class", "concept", "const", "constexpr", "consteval", "constinit",
+                                           "continue", "const_case", "co_await", "co_return", "co_yield", "decltype", "default", "delete", "do", "dynamic_cast", "else",
+                                           "enum", "explicit", "export", "extern", "false", "for", "friend", "goto", "if", "inline", "mutable", "namespace", "new",
+                                           "noexcept", "operator", "private", "public", "protected", "register", "reinterpret_cast", "requires", "return", "sizeof",
+                                           "static", "static_assert", "static_cast", "struct", "switch", "template", "typename", "this", "thread_local", "throw", "true",
+                                           "try", "typedef", "typeid", "using", "union", "virtual", "override", "while"};
 
-std::vector<std::string> typenames = {"bool", "char", "signed", "unsigned", "wchar_t", "char16_t", "char32_t", "short", "int", "long", "float",
-                                      "double", "void", "auto", "char8_t", "nullptr", "size_t", "volatile", "int8_t", "uint8_t", "int16_t",
-                                      "uint16_t", "int32_t", "uint32_t", "int64_t", "uint64_t"};
+const std::vector<std::string> typenames = {"bool", "char", "signed", "unsigned", "wchar_t", "char16_t", "char32_t", "short", "int", "long", "float", "double", "void",
+                                            "auto", "char8_t", "nullptr", "size_t", "volatile", "int8_t", "uint8_t", "int16_t", "uint16_t", "int32_t", "uint32_t",
+                                            "int64_t", "uint64_t"};
 
-std::vector<std::string> operators = {"+", "-", "=", "*", "&", "|", "^", "%", "?", ":", "=", "<", ">", "/", "!", "~", ".", ","};
+const std::vector<std::string> operators = {"+", "-", "=", "*", "&", "|", "^", "%", "?", ":", "=", "<", ">", "/", "!", "~", ".", ","};
 
 CodeParser::Token::Token()
 {
@@ -93,7 +91,12 @@ CodeParser::Token::Token(const std::string &str)
         if (isDigit)
             token_type = TokenType::LITERAL;
         else
-            token_type = TokenType::UNKNOWN;
+        {
+            if (str[0] == '"' && str[str.size()-1] == '"' || str[0] == "'"[0] && str[str.size()-1] == "'"[0])
+                token_type = TokenType::STRING;
+            else
+                token_type = TokenType::UNKNOWN;
+        }
     }
     token_value = str;
 }
@@ -144,6 +147,18 @@ std::string CodeParser::Token::type() const
         case TokenType::COMMENT:
             return "comment";
 
+        case TokenType::UNION:
+            return "union";
+
+        case TokenType::ENUM:
+            return "enum";
+
+        case TokenType::ALIAS:
+            return "alias";
+
+        case TokenType::USER_TYPE:
+            return "usertype";
+
         default:
             return "unknown";
     }
@@ -169,14 +184,27 @@ void CodeParser::Token::setType(const CodeParser::TokenType &_type)
     token_type = _type;
 }
 
-/*!
- * \brief makes from two tokens one combined if they have the same token type, else returns empty token
- *
- * \param token1 first token to combine
- * \param token2 second token to combine
- * \param space flag - true if space between token value needed
- * \return combined token
- */
+std::vector<std::string> CodeParser::Token::findUserTypes(const std::vector<Token> &tokens)
+{
+    std::vector<std::string> user_types;
+
+    for (int i = 1; i < tokens.size(); i++)
+    {
+        if ((tokens[i - 1].getType() == TokenType::CLASS || tokens[i - 1].getType() == TokenType::STRUCT || tokens[i - 1].getType() == TokenType::UNION ||
+             tokens[i - 1].getType() == TokenType::ENUM || tokens[i - 1].getToken() == "enum class") && tokens[i].getType() == TokenType::UNKNOWN)
+            user_types.emplace_back(tokens[i].getToken());
+    }
+
+    return user_types;
+}
+
+void CodeParser::Token::setUserTokenTypes(std::vector<Token> &tokens, const std::vector<std::string> &user_types)
+{
+    for (auto &token : tokens)
+        if (std::find(user_types.begin(), user_types.end(), token.getToken()) != user_types.end() && token.getType() == TokenType::UNKNOWN)
+            token.setType(TokenType::USER_TYPE);
+}
+
 CodeParser::Token CodeParser::Token::joinTokens(const CodeParser::Token &token1, const CodeParser::Token &token2, bool space)
 {
     if (token1.getType() != token2.getType())
@@ -192,17 +220,59 @@ CodeParser::Token CodeParser::Token::joinTokens(const CodeParser::Token &token1,
     return _token;
 }
 
-/*!
- * \brief combines each pair of consecutive tokens with keywords ("enum", "class" -> "enum class")
- *
- * \param tokens std::vector of tokens made from text of code
- */
+void CodeParser::Token::changeAliasAndMacroTokens(std::vector<CodeParser::Token> &tokens)
+{
+    std::unordered_map<std::string, TokenType> macro, alias;
+
+    for (int i = 0; i < tokens.size(); i++)
+    {
+        if (tokens[i].getToken() == "#define" && i < tokens.size() - 2 && tokens[i + 2].getToken() != "*new_line*")
+        {
+            Token temp = tokens[i + 2];
+            for (int j = i + 3; j < tokens.size(); j++)
+            {
+                if (tokens[j].getToken() == "*new_line*")
+                    break;
+                temp = Token().joinTokens(temp, tokens[j], true);
+            }
+            macro[tokens[i + 1].getToken()] = temp.getType();
+            i += 3;
+        }
+    }
+
+    for (int i = 0; i < tokens.size(); i++)
+    {
+        if (tokens[i].getToken() == "typedef")
+        {
+            for (int j = i + 1; j < tokens.size(); j++)
+            {
+                if (tokens[j].getType() == TokenType::SEMICOLON)
+                {
+                    alias[tokens[j - 1].getToken()] = tokens[i + 1].getType();
+                    break;
+                }
+            }
+        }
+        else if (tokens[i].getToken() == "using" && tokens[i + 2].getToken() == "=")
+            alias[tokens[i + 1].getToken()] = tokens[i + 3].getType();
+    }
+
+    for (auto &token: tokens)
+    {
+        if (macro.find(token.getToken()) != macro.end())
+            token.setType(macro[token.getToken()]);
+        else if (alias.find(token.getToken()) != alias.end())
+            token.setType(alias[token.getToken()]);
+    }
+}
+
 void CodeParser::Token::CombineKeywords(std::vector<CodeParser::Token> &tokens)
 {
     for (int i = 1; i < tokens.size(); i++)
     {
         if (tokens[i].getType() == CodeParser::TokenType::KEYWORD && tokens[i - 1].getType() == CodeParser::TokenType::KEYWORD)
         {
+
             tokens[i - 1].setToken(tokens[i - 1].getToken() + " " + tokens[i].getToken());
             tokens.erase(tokens.begin() + i);
             i--;
@@ -210,11 +280,6 @@ void CodeParser::Token::CombineKeywords(std::vector<CodeParser::Token> &tokens)
     }
 }
 
-/*!
- * \brief combines several comment tokens into one
- *
- * \param tokens std::vector of tokens made from text of code
- */
 void CodeParser::Token::CombineComments(std::vector<CodeParser::Token> &tokens)
 {
     for (int i = 0; i < tokens.size(); i++)
@@ -225,13 +290,12 @@ void CodeParser::Token::CombineComments(std::vector<CodeParser::Token> &tokens)
             {
                 for (int j = i + 1; j < tokens.size(); j++)
                 {
-                    tokens[j].setType(CodeParser::TokenType::COMMENT);
                     if (tokens[j].getToken() == "*new_line*")
                     {
-
                         i = j;
                         break;
                     }
+                    tokens[j].setType(CodeParser::TokenType::COMMENT);
                 }
             }
             else
@@ -243,8 +307,7 @@ void CodeParser::Token::CombineComments(std::vector<CodeParser::Token> &tokens)
                         i = j;
                         break;
                     }
-                    else
-                        tokens[j].setType(CodeParser::TokenType::COMMENT);
+                    tokens[j].setType(CodeParser::TokenType::COMMENT);
                 }
             }
         }
@@ -260,30 +323,7 @@ void CodeParser::Token::CombineComments(std::vector<CodeParser::Token> &tokens)
     }
 }
 
-/*!
- * \brief combines each pair of consecutive tokens with typenames ("unsigned", "long", "long" -> "unsigned long long")
- *
- * \param tokens std::vector of tokens made from text of code
- */
 void CodeParser::Token::CombineTypes(std::vector<CodeParser::Token> &tokens)
-{
-    for (int i = 1; i < tokens.size(); i++)
-    {
-        if (tokens[i].getType() == CodeParser::TokenType::OPERATOR && tokens[i - 1].getType() == CodeParser::TokenType::OPERATOR)
-        {
-            tokens[i - 1].setToken(tokens[i - 1].getToken() + tokens[i].getToken());
-            tokens.erase(tokens.begin() + i);
-            i--;
-        }
-    }
-}
-
-/*!
- * \brief combines each pair of consecutive tokens with operators ("+", "=" -> "+=")
- *
- * \param tokens std::vector of tokens made from text of code
- */
-void CodeParser::Token::CombineOperators(std::vector<CodeParser::Token> &tokens)
 {
     for (int i = 1; i < tokens.size(); i++)
     {
@@ -296,16 +336,37 @@ void CodeParser::Token::CombineOperators(std::vector<CodeParser::Token> &tokens)
     }
 }
 
-/*!
- * \brief makes from a text of code vector of tokens
- *
- * \param code text of code
- * \param spaces flag if it is necessary to process spaces (" ") as separate tokens
- * \param tabs flag if it is necessary to process tabs ("\t") as separate tokens
- * \param new_lines flag if it is necessary to process line breaks ("\n") as separate tokens
- * \return std::vector of tokens
- */
-std::vector<CodeParser::Token> CodeParser::Token::TokenizeText(const std::string &code, bool spaces, bool tabs, bool new_lines)
+void CodeParser::Token::CombineOperators(std::vector<CodeParser::Token> &tokens)
+{
+    for (int i = 1; i < tokens.size(); i++)
+    {
+        if (tokens[i].getType() == CodeParser::TokenType::OPERATOR && tokens[i - 1].getType() == CodeParser::TokenType::OPERATOR)
+        {
+            tokens[i - 1].setToken(tokens[i - 1].getToken() + tokens[i].getToken());
+            tokens.erase(tokens.begin() + i);
+            i--;
+        }
+    }
+}
+
+void CodeParser::Token::AddToken(std::vector<CodeParser::Token> &tokens, const std::string &token)
+{
+    if (!token.empty())
+    {
+        if (token.find(';') != std::string::npos && token.size() > 1)
+        {
+            std::string str1 = token.substr(0, token.size() - 1), str2 = ";";
+            tokens.emplace_back(Token(str1));
+            tokens.emplace_back(Token(str2));
+        }
+        else
+            tokens.emplace_back(Token(token));
+    }
+}
+
+std::vector<CodeParser::Token>
+CodeParser::Token::TokenizeText(const std::string &code, bool spaces, bool tabs, bool new_lines, bool combineKeywords, bool combineComments, bool combineTypes,
+                                bool combineOperators)
 {
     std::vector<CodeParser::Token> Tokens;
 
@@ -319,15 +380,14 @@ std::vector<CodeParser::Token> CodeParser::Token::TokenizeText(const std::string
             {
                 inString = false;
                 temp.push_back(i);
-                Tokens.emplace_back(Token(temp));
+                AddToken(Tokens, temp);
                 temp.clear();
                 continue;
             }
             else
             {
                 inString = true;
-                if (!temp.empty())
-                    Tokens.emplace_back(Token(temp));
+                AddToken(Tokens, temp);
                 temp.clear();
                 temp.push_back(i);
                 continue;
@@ -341,8 +401,7 @@ std::vector<CodeParser::Token> CodeParser::Token::TokenizeText(const std::string
         {
             if (i == ' ' || i == '\n' || i == '\t')
             {
-                if (!temp.empty())
-                    Tokens.emplace_back(Token(temp));
+                AddToken(Tokens, temp);
                 temp.clear();
                 if (i == ' ' && spaces)
                     Tokens.emplace_back(Token(" "));
@@ -351,24 +410,24 @@ std::vector<CodeParser::Token> CodeParser::Token::TokenizeText(const std::string
                 else if (i == '\t' && tabs)
                     Tokens.emplace_back(Token("\t"));
             }
-            else if (std::find(operators.begin(), operators.end(), std::to_string(i)) != operators.end() || i == '(' || i == ')' || i == '[' ||
-                     i == ']' || i == '{' || i == '}')
+            else if (std::find(operators.begin(), operators.end(), std::to_string(i)) != operators.end() || i == '(' || i == ')' || i == '[' || i == ']' || i == '{' ||
+                     i == '}')
             {
                 if (!temp.empty())
-                    Tokens.emplace_back(Token(temp));
-                temp.clear();
-                temp.push_back(i);
-                if (!temp.empty())
-                    Tokens.emplace_back(Token(temp));
-                temp.clear();
+                {
+                    AddToken(Tokens, temp);
+                    temp.clear();
+                    temp.push_back(i);
+                    AddToken(Tokens, temp);
+                    temp.clear();
+                }
             }
             else if (i == "'"[0])
             {
                 if (!inQuote)
                 {
                     inQuote = true;
-                    if (!temp.empty())
-                        Tokens.emplace_back(Token(temp));
+                    AddToken(Tokens, temp);
                     temp.clear();
                     temp.push_back(i);
                 }
@@ -389,17 +448,26 @@ std::vector<CodeParser::Token> CodeParser::Token::TokenizeText(const std::string
 
     Tokens.emplace_back(Token(temp));
 
-    CombineOperators(Tokens);
-    CombineTypes(Tokens);
-    CombineComments(Tokens);
+    if (combineComments)
+        CombineComments(Tokens);
+
+    changeAliasAndMacroTokens(Tokens);
+
+    if (combineKeywords)
+        CombineKeywords(Tokens);
+    if (combineOperators)
+        CombineOperators(Tokens);
+    if (combineTypes)
+        CombineTypes(Tokens);
+
+    setUserTokenTypes(Tokens, findUserTypes(Tokens));
 
     return Tokens;
 }
 
-/*!
- * \brief does the same things as previous method, but with the whole file
- */
-std::vector<CodeParser::Token> CodeParser::Token::TokenizeFile(const std::string &FileName, bool spaces, bool tabs, bool new_lines)
+std::vector<CodeParser::Token>
+CodeParser::Token::TokenizeFile(const std::string &FileName, bool spaces, bool tabs, bool new_lines, bool combineKeywords, bool combineComments, bool combineTypes,
+                                bool combineOperators)
 {
     std::ifstream file;
     file.open(FileName);
@@ -409,5 +477,5 @@ std::vector<CodeParser::Token> CodeParser::Token::TokenizeFile(const std::string
 
     std::string code = temp.str();
 
-    return TokenizeText(code, spaces, tabs, new_lines);
+    return TokenizeText(code, spaces, tabs, new_lines, combineKeywords, combineComments, combineTypes, combineOperators);
 }
