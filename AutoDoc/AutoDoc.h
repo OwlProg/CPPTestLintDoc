@@ -1,6 +1,5 @@
 /*!
-    \author Kozulin Ilya
-    \warning tests needed; generating .html, .md and .pdf still not implemented
+    @author Kozulin Ilya
 */
 
 #ifndef CPPTESTLINTDOC_AUTODOC_H
@@ -9,41 +8,32 @@
 #include <filesystem>
 #include <unordered_map>
 #include <map>
+#include <regex>
 
 #include "../Utils/Tokenizer.h"
+
+namespace fs = std::filesystem;
 
 namespace docgen
 {
 
     enum class ObjectType
     {
-        CLASS,
-        STRUCTURE,
-        FUNCTION,
-        ENUMERATION,
-        UNION,
-        NAMESPACE,
+        CLASS_OR_USERTYPE,
+        GLOBAL_VARIABLE_OR_FUNCTION,
         UNKNOWN
     };
 
     enum class InfoType
     {
         TYPE_OF_OBJECT,
-        NAME,
+        SHORT_NAME,
+        FULL_NAME,
+        FILE,
         NAMESPACE,
         BRIEF,
-        AUTHORS,
-        VERSION,
-        DATE,
-        BUG,
-        WARNING,
-        COPYRIGHT,
-        EXAMPLE,
-        TODO,
-        PARAMETER,
-        RETURN,
-        MEMBER_FUNCTION,
-        MEMBER_CONSTANT
+        MEMBER,
+        UNKNOWN
     };
 
     class ObjectInfo
@@ -64,7 +54,9 @@ namespace docgen
 
         static std::string infotype2string(InfoType _type);
 
-        static void findRequiredInfo(const std::vector<CodeParser::Token>& code, const std::string& object_name, const InfoType &_type);
+        static std::string commentPreprocessing(std::string str);
+
+        void findRequiredInfo(const std::vector<CodeParser::Token> &code, const size_t &object_idx);
     };
 
     class Documentation
@@ -79,20 +71,32 @@ namespace docgen
 
         void createDocFilesStructure();
 
-        void generateIndex();
-
         void generateDocForAnObject(const ObjectInfo &obj);
 
         void makeMarkdown();
-
-        void makeFullHtmlDoc();
 
         void generateDocumentation();
 
         std::vector<ObjectInfo> adviseToDocument();
 
-        void createDocumentation(const std::string& FileName);
+        void createDocumentation(const std::string &FileName);
     };
 }
+
+namespace Constants
+{
+    class Paths
+    {
+    public:
+        static constexpr char *objects_path = "docs/objects";
+        static constexpr char *index_path = "docs/index.html";
+        static constexpr char *sidebar_path = "docs/objects/menu.html";
+        static constexpr char *index_start_pattern_path = "Utils/index_start_pattern.html";
+        static constexpr char *index_end_pattern_path = "Utils/index_end_pattern.html";
+        static constexpr char *sidebar_start_pattern_path = "Utils/menu_start_pattern.html";
+        static constexpr char *sidebar_end_pattern_path = "Utils/menu_end_pattern.html";
+    };
+}
+
 
 #endif //CPPTESTLINTDOC_AUTODOC_H

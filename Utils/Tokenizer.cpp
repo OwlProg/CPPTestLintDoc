@@ -4,19 +4,6 @@
 
 #include "Tokenizer.h"
 
-const std::vector<std::string> keywords = {"alignas", "alignof", "__asm", "break", "case", "catch", "class", "concept", "const", "constexpr", "consteval", "constinit",
-                                           "continue", "const_case", "co_await", "co_return", "co_yield", "decltype", "default", "delete", "do", "dynamic_cast", "else",
-                                           "enum", "explicit", "export", "extern", "false", "for", "friend", "goto", "if", "inline", "mutable", "namespace", "new",
-                                           "noexcept", "operator", "private", "public", "protected", "register", "reinterpret_cast", "requires", "return", "sizeof",
-                                           "static", "static_assert", "static_cast", "struct", "switch", "template", "typename", "this", "thread_local", "throw", "true",
-                                           "try", "typedef", "typeid", "using", "union", "virtual", "override", "while"};
-
-const std::vector<std::string> typenames = {"bool", "char", "signed", "unsigned", "wchar_t", "char16_t", "char32_t", "short", "int", "long", "float", "double", "void",
-                                            "auto", "char8_t", "nullptr", "size_t", "volatile", "int8_t", "uint8_t", "int16_t", "uint16_t", "int32_t", "uint32_t",
-                                            "int64_t", "uint64_t"};
-
-const std::vector<std::string> operators = {"+", "-", "=", "*", "&", "|", "^", "%", "?", ":", "=", "<", ">", "/", "!", "~", ".", ","};
-
 CodeParser::Token::Token()
 {
     token_type = TokenType::UNKNOWN;
@@ -26,7 +13,7 @@ CodeParser::Token::Token()
 
 CodeParser::Token::Token(const std::string &str)
 {
-    if (std::find(keywords.begin(), keywords.end(), str) != keywords.end())
+    if (std::find(Constants::keywords.begin(), Constants::keywords.end(), str) != Constants::keywords.end())
     {
         if (str == "class")
             token_type = TokenType::CLASS;
@@ -37,10 +24,10 @@ CodeParser::Token::Token(const std::string &str)
         else
             token_type = TokenType::KEYWORD;
     }
-    else if (std::find(operators.begin(), operators.end(), str) != operators.end())
+    else if (std::find(Constants::operators.begin(), Constants::operators.end(), str) != Constants::operators.end())
         token_type = TokenType::OPERATOR;
 
-    else if (std::find(typenames.begin(), typenames.end(), str) != typenames.end())
+    else if (std::find(Constants::typenames.begin(), Constants::typenames.end(), str) != Constants::typenames.end())
         token_type = TokenType::TYPENAME;
 
     else if (str == "///" || str == "//" || str == "/*" || str == "*/" || str == "/*!" || str == "//!" || str == "///<")
@@ -92,7 +79,7 @@ CodeParser::Token::Token(const std::string &str)
             token_type = TokenType::LITERAL;
         else
         {
-            if (str[0] == '"' && str[str.size()-1] == '"' || str[0] == "'"[0] && str[str.size()-1] == "'"[0])
+            if (str[0] == '"' && str[str.size() - 1] == '"' || str[0] == "'"[0] && str[str.size() - 1] == "'"[0])
                 token_type = TokenType::STRING;
             else
                 token_type = TokenType::UNKNOWN;
@@ -410,7 +397,7 @@ CodeParser::Token::TokenizeText(const std::string &code, bool spaces, bool tabs,
                 else if (i == '\t' && tabs)
                     Tokens.emplace_back(Token("\t"));
             }
-            else if (std::find(operators.begin(), operators.end(), std::to_string(i)) != operators.end() || i == '(' || i == ')' || i == '[' || i == ']' || i == '{' ||
+            else if (std::find(Constants::operators.begin(), Constants::operators.end(), std::to_string(i)) != Constants::operators.end() || i == '(' || i == ')' || i == '[' || i == ']' || i == '{' ||
                      i == '}')
             {
                 if (!temp.empty())
