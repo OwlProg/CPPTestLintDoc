@@ -27,6 +27,7 @@ namespace CodeParser
         STRUCT,
         UNION,
         ENUM,
+        ALIAS,
         FUNCTION,
         VARIABLE,
         OPERATOR,
@@ -165,8 +166,22 @@ namespace CodeParser
          */
         static std::vector<Token> TokenizeFile(const std::string &FileName, bool spaces = false, bool tabs = false, bool new_lines = false, bool combineKeywords = false,
                                                bool combineComments = false, bool combineTypes = false, bool combineOperators = false);
-
     };
 }
 
+namespace Constants
+{
+    const std::vector<std::string> keywords = {"alignas", "alignof", "__asm", "break", "case", "catch", "class", "concept", "const", "constexpr", "consteval", "constinit",
+                                               "continue", "const_case", "co_await", "co_return", "co_yield", "decltype", "default", "delete", "do", "dynamic_cast", "else",
+                                               "enum", "explicit", "export", "extern", "false", "for", "friend", "goto", "if", "inline", "mutable", "namespace", "new",
+                                               "noexcept", "operator", "private", "public", "protected", "register", "reinterpret_cast", "requires", "return", "sizeof",
+                                               "static", "static_assert", "static_cast", "struct", "switch", "template", "typename", "this", "thread_local", "throw",
+                                               "true", "try", "typedef", "typeid", "using", "union", "virtual", "override", "while"};
+
+    const std::vector<std::string> typenames = {"bool", "char", "signed", "unsigned", "wchar_t", "char16_t", "char32_t", "short", "int", "long", "float", "double",
+                                                "void", "auto", "char8_t", "nullptr", "size_t", "volatile", "int8_t", "uint8_t", "int16_t", "uint16_t", "int32_t",
+                                                "uint32_t", "int64_t", "uint64_t"};
+
+    const std::vector<std::string> operators = {"+", "-", "=", "*", "&", "|", "^", "%", "?", ":", "=", "<", ">", "/", "!", "~", ".", ","};
+}
 #endif //CPPTESTLINTDOC_TOKENIZER_H
