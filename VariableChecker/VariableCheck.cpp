@@ -12,7 +12,7 @@ int VariableCheck::findVariable(const std::string& needle) {
 }
 
 bool VariableCheck::areVariablesInitialized() {
-    auto v = CodeParser::Token::TokenizeFile("test.cpp");
+    auto v = CodeParser::Token::TokenizeFile(fname);
     for (int i = 0; i < v.size() - 1; i++) {
         if (v[i].getType() == CodeParser::TokenType::VARIABLE) {
             varTable.emplace_back(
