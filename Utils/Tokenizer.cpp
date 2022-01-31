@@ -16,14 +16,17 @@ CodeParser::Token::Token(const std::string &str)
     if (std::find(Constants::keywords.begin(), Constants::keywords.end(), str) != Constants::keywords.end())
     {
         if (str == "class")
-            token_type = TokenType::CLASS;
+            token_type = TokenType::CLASS_DEF;
 
         else if (str == "struct")
-            token_type = TokenType::STRUCT;
+            token_type = TokenType::STRUCT_DEF;
 
         else
             token_type = TokenType::KEYWORD;
     }
+    else if (str[0] == '#' && str.size() > 1)
+        token_type = TokenType::PREPROCESSOR_DIRECTIVE;
+
     else if (std::find(Constants::operators.begin(), Constants::operators.end(), str) != Constants::operators.end())
         token_type = TokenType::OPERATOR;
 
@@ -104,16 +107,16 @@ std::string CodeParser::Token::type() const
         case TokenType::STRING:
             return "string";
 
-        case TokenType::CLASS:
+        case TokenType::CLASS_DEF:
             return "class";
 
-        case TokenType::STRUCT:
+        case TokenType::STRUCT_DEF:
             return "struct";
 
-        case TokenType::FUNCTION:
+        case TokenType::FUNCTION_NAME:
             return "function";
 
-        case TokenType::VARIABLE:
+        case TokenType::VARIABLE_NAME:
             return "variable";
 
         case TokenType::OPERATOR:
@@ -134,17 +137,17 @@ std::string CodeParser::Token::type() const
         case TokenType::COMMENT:
             return "comment";
 
-        case TokenType::UNION:
+        case TokenType::UNION_DEF:
             return "union";
 
-        case TokenType::ENUM:
+        case TokenType::ENUM_DEF:
             return "enum";
 
         case TokenType::ALIAS:
             return "alias";
 
-        case TokenType::USER_TYPE:
-            return "usertype";
+        case TokenType::PREPROCESSOR_DIRECTIVE:
+            return "preprocessor directive";
 
         default:
             return "unknown";
@@ -177,8 +180,8 @@ std::vector<std::string> CodeParser::Token::findUserTypes(const std::vector<Toke
 
     for (int i = 1; i < tokens.size(); i++)
     {
-        if ((tokens[i - 1].getType() == TokenType::CLASS || tokens[i - 1].getType() == TokenType::STRUCT || tokens[i - 1].getType() == TokenType::UNION ||
-             tokens[i - 1].getType() == TokenType::ENUM || tokens[i - 1].getToken() == "enum class") && tokens[i].getType() == TokenType::UNKNOWN)
+        if ((tokens[i - 1].getType() == TokenType::CLASS_DEF || tokens[i - 1].getType() == TokenType::STRUCT_DEF || tokens[i - 1].getType() == TokenType::UNION_DEF ||
+             tokens[i - 1].getType() == TokenType::ENUM_DEF || tokens[i - 1].getToken() == "enum class") && tokens[i].getType() == TokenType::UNKNOWN)
             user_types.emplace_back(tokens[i].getToken());
     }
 
@@ -189,7 +192,7 @@ void CodeParser::Token::setUserTokenTypes(std::vector<Token> &tokens, const std:
 {
     for (auto &token : tokens)
         if (std::find(user_types.begin(), user_types.end(), token.getToken()) != user_types.end() && token.getType() == TokenType::UNKNOWN)
-            token.setType(TokenType::USER_TYPE);
+            token.setType(TokenType::TYPENAME);
 }
 
 CodeParser::Token CodeParser::Token::joinTokens(const CodeParser::Token &token1, const CodeParser::Token &token2, bool space)
@@ -253,7 +256,7 @@ void CodeParser::Token::changeAliasAndMacroTokens(std::vector<CodeParser::Token>
     }
 }
 
-void CodeParser::Token::CombineKeywords(std::vector<CodeParser::Token> &tokens)
+void CodeParser::Token::combineKeywords(std::vector<CodeParser::Token> &tokens)
 {
     for (int i = 1; i < tokens.size(); i++)
     {
@@ -267,7 +270,7 @@ void CodeParser::Token::CombineKeywords(std::vector<CodeParser::Token> &tokens)
     }
 }
 
-void CodeParser::Token::CombineComments(std::vector<CodeParser::Token> &tokens)
+void CodeParser::Token::combineComments(std::vector<CodeParser::Token> &tokens)
 {
     for (int i = 0; i < tokens.size(); i++)
     {
@@ -310,7 +313,7 @@ void CodeParser::Token::CombineComments(std::vector<CodeParser::Token> &tokens)
     }
 }
 
-void CodeParser::Token::CombineTypes(std::vector<CodeParser::Token> &tokens)
+void CodeParser::Token::combineTypes(std::vector<CodeParser::Token> &tokens)
 {
     for (int i = 1; i < tokens.size(); i++)
     {
@@ -323,7 +326,7 @@ void CodeParser::Token::CombineTypes(std::vector<CodeParser::Token> &tokens)
     }
 }
 
-void CodeParser::Token::CombineOperators(std::vector<CodeParser::Token> &tokens)
+void CodeParser::Token::combineOperators(std::vector<CodeParser::Token> &tokens)
 {
     for (int i = 1; i < tokens.size(); i++)
     {
@@ -336,24 +339,111 @@ void CodeParser::Token::CombineOperators(std::vector<CodeParser::Token> &tokens)
     }
 }
 
-void CodeParser::Token::AddToken(std::vector<CodeParser::Token> &tokens, const std::string &token)
+void CodeParser::Token::addToken(std::vector<CodeParser::Token> &tokens, const std::string &token)
 {
     if (!token.empty())
     {
         if (token.find(';') != std::string::npos && token.size() > 1)
         {
             std::string str1 = token.substr(0, token.size() - 1), str2 = ";";
-            tokens.emplace_back(Token(str1));
+            addToken(tokens, str1);
             tokens.emplace_back(Token(str2));
         }
-        else
+        else if (token == "//" || token == "/*" || token == "*/" || token == "///" || token == "///<" || token == "//!" || token == "/*!")
             tokens.emplace_back(Token(token));
+        else
+        {
+            size_t operator_idx = -1;
+            for (size_t i = 0; i < token.size(); i++)
+            {
+                if (std::find(Constants::operators.begin(), Constants::operators.end(), std::string(1, token[i])) != Constants::operators.end())
+                {
+                    operator_idx = i;
+                    break;
+                }
+            }
+            if (operator_idx != -1)
+            {
+                std::string before_operator = token.substr(0, operator_idx), after_operator = token.substr(operator_idx + 1, token.size() - operator_idx + 1);
+                if (!before_operator.empty())
+                    tokens.emplace_back(Token(before_operator));
+                tokens.emplace_back(Token(std::string(1, token[operator_idx])));
+                if (!after_operator.empty())
+                    addToken(tokens, after_operator);
+            }
+            else
+            {
+                tokens.emplace_back(Token(token));
+            }
+        }
+    }
+    else
+    {
+        return;
     }
 }
 
+void CodeParser::Token::setVariablesAndFunctionsTokenTypes(std::vector<Token> &tokens)
+{
+    std::unordered_set<std::string> variables, functions;
+
+    for (size_t i = 0; i < tokens.size() - 2; i++)
+    {
+        if (tokens[i].getType() == TokenType::TYPENAME && tokens[i + 1].getType() == TokenType::UNKNOWN)
+        {
+            if (tokens[i + 2].getType() == TokenType::OPEN_BRACKET)
+            {
+                tokens[i + 1].setType(TokenType::FUNCTION_NAME);
+                functions.insert(tokens[i + 1].getToken());
+            }
+            else
+            {
+                tokens[i + 1].setType(TokenType::VARIABLE_NAME);
+                variables.insert(tokens[i + 1].getToken());
+            }
+        }
+        else if (tokens[i].getType() == TokenType::UNKNOWN)
+        {
+            if (variables.find(tokens[i].getToken()) != variables.end())
+                tokens[i].setType(TokenType::VARIABLE_NAME);
+            else if (functions.find(tokens[i].getToken()) != functions.end())
+                tokens[i].setType(TokenType::FUNCTION_NAME);
+        }
+    }
+}
+
+void CodeParser::Token::setClassNameTokenTypes(std::vector<Token> &tokens)
+{
+    std::unordered_set<std::string> class_names;
+
+    for (size_t i = 0; i < tokens.size() - 3; i++)
+    {
+        if (std::find(class_names.begin(), class_names.end(), tokens[i].getToken()) != class_names.end())
+            tokens[i].setType(TokenType::TYPENAME);
+        else if (tokens[i].getType() == TokenType::UNKNOWN && tokens[i + 1].getToken() == "<" && tokens[i + 2].getType() == TokenType::TYPENAME &&
+                 tokens[i + 3].getToken() == ">")
+        {
+            tokens[i].setType(TokenType::TYPENAME);
+            class_names.insert(tokens[i].getToken());
+        }
+    }
+
+    for (size_t i = 0; i < tokens.size() - 3; i++)
+    {
+        if (std::find(class_names.begin(), class_names.end(), tokens[i].getToken()) != class_names.end() && tokens[i + 1].getToken() == "<" &&
+            tokens[i + 2].getType() == TokenType::TYPENAME && tokens[i + 3].getToken() == ">")
+        {
+            tokens[i].setToken(tokens[i].getToken() + tokens[i + 1].getToken() + tokens[i + 2].getToken() + tokens[i + 3].getToken());
+            tokens[i].setType(TokenType::TYPENAME);
+            tokens.erase(tokens.begin() + i + 1, tokens.begin() + i + 4);
+        }
+    }
+}
+
+
 std::vector<CodeParser::Token>
-CodeParser::Token::TokenizeText(const std::string &code, bool spaces, bool tabs, bool new_lines, bool combineKeywords, bool combineComments, bool combineTypes,
-                                bool combineOperators)
+CodeParser::Token::TokenizeText(const std::string &code, bool spaces, bool tabs, bool new_lines, bool combine_keywords, bool combine_comments, bool combine_types,
+                                bool combine_operators)
 {
     std::vector<CodeParser::Token> Tokens;
 
@@ -367,14 +457,14 @@ CodeParser::Token::TokenizeText(const std::string &code, bool spaces, bool tabs,
             {
                 inString = false;
                 temp.push_back(i);
-                AddToken(Tokens, temp);
+                addToken(Tokens, temp);
                 temp.clear();
                 continue;
             }
             else
             {
                 inString = true;
-                AddToken(Tokens, temp);
+                addToken(Tokens, temp);
                 temp.clear();
                 temp.push_back(i);
                 continue;
@@ -388,7 +478,7 @@ CodeParser::Token::TokenizeText(const std::string &code, bool spaces, bool tabs,
         {
             if (i == ' ' || i == '\n' || i == '\t')
             {
-                AddToken(Tokens, temp);
+                addToken(Tokens, temp);
                 temp.clear();
                 if (i == ' ' && spaces)
                     Tokens.emplace_back(Token(" "));
@@ -397,15 +487,15 @@ CodeParser::Token::TokenizeText(const std::string &code, bool spaces, bool tabs,
                 else if (i == '\t' && tabs)
                     Tokens.emplace_back(Token("\t"));
             }
-            else if (std::find(Constants::operators.begin(), Constants::operators.end(), std::to_string(i)) != Constants::operators.end() || i == '(' || i == ')' || i == '[' || i == ']' || i == '{' ||
-                     i == '}')
+            else if (std::find(Constants::operators.begin(), Constants::operators.end(), std::to_string(i)) != Constants::operators.end() || i == '(' || i == ')' ||
+                     i == '[' || i == ']' || i == '{' || i == '}')
             {
                 if (!temp.empty())
                 {
-                    AddToken(Tokens, temp);
+                    addToken(Tokens, temp);
                     temp.clear();
                     temp.push_back(i);
-                    AddToken(Tokens, temp);
+                    addToken(Tokens, temp);
                     temp.clear();
                 }
             }
@@ -414,7 +504,7 @@ CodeParser::Token::TokenizeText(const std::string &code, bool spaces, bool tabs,
                 if (!inQuote)
                 {
                     inQuote = true;
-                    AddToken(Tokens, temp);
+                    addToken(Tokens, temp);
                     temp.clear();
                     temp.push_back(i);
                 }
@@ -435,38 +525,28 @@ CodeParser::Token::TokenizeText(const std::string &code, bool spaces, bool tabs,
 
     Tokens.emplace_back(Token(temp));
 
-    if (combineComments)
-        CombineComments(Tokens);
+    if (combine_comments)
+        combineComments(Tokens);
 
     changeAliasAndMacroTokens(Tokens);
 
-    if (combineKeywords)
-        CombineKeywords(Tokens);
-    if (combineOperators)
-        CombineOperators(Tokens);
-    if (combineTypes)
-        CombineTypes(Tokens);
+    if (combine_keywords)
+        combineKeywords(Tokens);
+    if (combine_operators)
+        combineOperators(Tokens);
+    if (combine_types)
+        combineTypes(Tokens);
 
     setUserTokenTypes(Tokens, findUserTypes(Tokens));
-
-    // Finding variables and functions definitions
-    for (size_t i = 0; i < Tokens.size() - 2; i++)
-    {
-        if (Tokens[i].getType() == TokenType::TYPENAME && Tokens[i+1].getType() == TokenType::UNKNOWN)
-        {
-            if (Tokens[i+2].getType() == TokenType::OPEN_BRACKET)
-                Tokens[i+1].setType(TokenType::FUNCTION);
-            else
-                Tokens[i+1].setType(TokenType::VARIABLE);
-        }
-    }
+    setClassNameTokenTypes(Tokens);
+    setVariablesAndFunctionsTokenTypes(Tokens);
 
     return Tokens;
 }
 
 std::vector<CodeParser::Token>
-CodeParser::Token::TokenizeFile(const std::string &FileName, bool spaces, bool tabs, bool new_lines, bool combineKeywords, bool combineComments, bool combineTypes,
-                                bool combineOperators)
+CodeParser::Token::TokenizeFile(const std::string &FileName, bool spaces, bool tabs, bool new_lines, bool combine_keywords, bool combine_comments, bool combine_types,
+                                bool combine_operators)
 {
     std::ifstream file;
     file.open(FileName);
@@ -476,5 +556,5 @@ CodeParser::Token::TokenizeFile(const std::string &FileName, bool spaces, bool t
 
     std::string code = temp.str();
 
-    return TokenizeText(code, spaces, tabs, new_lines, combineKeywords, combineComments, combineTypes, combineOperators);
+    return TokenizeText(code, spaces, tabs, new_lines, combine_keywords, combine_comments, combine_types, combine_operators);
 }
