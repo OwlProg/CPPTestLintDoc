@@ -449,6 +449,18 @@ CodeParser::Token::TokenizeText(const std::string &code, bool spaces, bool tabs,
 
     setUserTokenTypes(Tokens, findUserTypes(Tokens));
 
+    // Finding variables and functions definitions
+    for (size_t i = 0; i < Tokens.size() - 2; i++)
+    {
+        if (Tokens[i].getType() == TokenType::TYPENAME && Tokens[i+1].getType() == TokenType::UNKNOWN)
+        {
+            if (Tokens[i+2].getType() == TokenType::OPEN_BRACKET)
+                Tokens[i+1].setType(TokenType::FUNCTION);
+            else
+                Tokens[i+1].setType(TokenType::VARIABLE);
+        }
+    }
+
     return Tokens;
 }
 

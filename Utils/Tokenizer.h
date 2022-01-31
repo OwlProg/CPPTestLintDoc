@@ -184,4 +184,5 @@ namespace Constants
 
     const std::vector<std::string> operators = {"+", "-", "=", "*", "&", "|", "^", "%", "?", ":", "=", "<", ">", "/", "!", "~", ".", ","};
 }
+
 #endif //CPPTESTLINTDOC_TOKENIZER_H
