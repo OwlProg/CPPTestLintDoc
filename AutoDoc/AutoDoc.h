@@ -5,14 +5,16 @@
 #ifndef CPPTESTLINTDOC_AUTODOC_H
 #define CPPTESTLINTDOC_AUTODOC_H
 
-#include <filesystem>
+//#include <experimental/filesystem>
 #include <unordered_map>
 #include <map>
 #include <regex>
+#include <string_view>
 
 #include "../Utils/Tokenizer.h"
+#include "../Utils/StringTools.h"
 
-namespace fs = std::filesystem;
+//namespace fs = std::filesystem;
 
 namespace docgen
 {
@@ -46,6 +48,8 @@ namespace docgen
 
     public:
 
+        ObjectInfo();
+
         void setType(ObjectType _type);
 
         void setInfo(const InfoType &_type, const std::string &_doc);
@@ -69,33 +73,33 @@ namespace docgen
 
         Documentation();
 
-        void createDocFilesStructure();
+        static void createDocFilesStructure();
 
-        void generateDocForAnObject(const ObjectInfo &obj);
+        void makeMarkdown(const Documentation &objects);
 
-        void makeMarkdown();
+        void makeHTML(const Documentation &objects);
 
-        void generateDocumentation();
-
-        std::vector<ObjectInfo> adviseToDocument();
-
-        void createDocumentation(const std::string &FileName);
+        void createDocumentation(const std::string &PathToFile);
     };
 }
 
 namespace Constants
 {
-    class Paths
-    {
-    public:
-        static constexpr char *objects_path = "docs/objects";
-        static constexpr char *index_path = "docs/index.html";
-        static constexpr char *sidebar_path = "docs/objects/menu.html";
-        static constexpr char *index_start_pattern_path = "Utils/index_start_pattern.html";
-        static constexpr char *index_end_pattern_path = "Utils/index_end_pattern.html";
-        static constexpr char *sidebar_start_pattern_path = "Utils/menu_start_pattern.html";
-        static constexpr char *sidebar_end_pattern_path = "Utils/menu_end_pattern.html";
-    };
+    using namespace std::literals;
+
+    inline constexpr std::string_view objects_path = "docs/objects";
+
+    inline constexpr std::string_view index_path = "docs/index.html";
+
+    inline constexpr std::string_view sidebar_path = "docs/objects/menu.html";
+
+    inline constexpr std::string_view index_start_pattern_path = "AutoDoc/DocPatterns/index_start_pattern.html";
+
+    inline constexpr std::string_view index_end_pattern_path = "AutoDoc/DocPatterns/index_end_pattern.html";
+
+    inline constexpr std::string_view sidebar_start_pattern_path = "AutoDoc/DocPatterns/menu_start_pattern.html";
+
+    inline constexpr std::string_view sidebar_end_pattern_path = "AutoDoc/DocPatterns/menu_end_pattern.html";
 }
 
 
