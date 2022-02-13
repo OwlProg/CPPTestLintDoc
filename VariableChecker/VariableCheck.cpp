@@ -12,11 +12,29 @@ int VariableCheck::findVariable(const std::string& needle) {
 }
 
 bool VariableCheck::areVariablesInitialized() {
+    bool funcArgs = false;
+    bool maybeVar = false;
     auto v = CodeParser::Token::TokenizeFile(fname);
     for (int i = 0; i < v.size() - 1; i++) {
-        if (v[i].getType() == CodeParser::TokenType::VARIABLE) {
+        if (v[i].getType() == CodeParser::TokenType::FUNCTION) {
+            funcArgs = true;
+        }
+        if(v[i].getType() == CodeParser::TokenType::CLOSE_BRACKET && funcArgs) funcArgs = false;
+        if (v[i].getType() == CodeParser::TokenType::VARIABLE && !funcArgs) {
             varTable.emplace_back(
                     std::make_pair(v[i].getToken(), v[i + 1].getType() == CodeParser::TokenType::OPERATOR));
+        }
+        if (v[i].getType() == CodeParser::TokenType::UNKNOWN && v[i + 1].getType() == CodeParser::TokenType::UNKNOWN) {
+            maybeVar = true;
+            continue;
+        }
+        if ((v[i + 1].getType() == CodeParser::TokenType::OPERATOR || v[i + 1].getType() == CodeParser::TokenType::SEMICOLON) && maybeVar) {
+            varTable.emplace_back(
+                    std::make_pair(v[i].getToken(), v[i + 1].getType() == CodeParser::TokenType::OPERATOR));
+            maybeVar = false;
+        }
+        else if ((v[i + 1].getType() != CodeParser::TokenType::OPERATOR || v[i + 1].getType() != CodeParser::TokenType::SEMICOLON) && maybeVar){
+            maybeVar = false;
         }
         if (v[i].getType() == CodeParser::TokenType::UNKNOWN
             && v[i + 1].getType() == CodeParser::TokenType::OPERATOR) {
