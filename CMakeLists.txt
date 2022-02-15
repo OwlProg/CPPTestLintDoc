@@ -4,8 +4,8 @@ project(CPPTestLintDoc)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(CPPTestLintDoc Utils/Tokenizer.cpp Utils/Tokenizer.h AutoDoc/AutoDoc.cpp AutoDoc/AutoDoc.h main.cpp Utils/StringTools.cpp Utils/StringTools.h)
+add_executable(CPPTestLintDoc src/AutoDoc/AutoDoc.cpp src/AutoDoc/AutoDoc.h src/Utils/Utils.cpp src/Utils/Utils.h)
 
 
 # AutoDoc DEBUG
-#add_executable(test main.cpp)
+add_executable(test main.cpp)

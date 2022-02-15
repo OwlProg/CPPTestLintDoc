@@ -1,0 +1,27 @@
+ProjectName:
+  %PROJECT_NAME%
+
+RootPath:
+  %ROOT_PATH%
+
+LogoPath:
+  %LOGO_PATH%
+
+# Choose Dark or Light
+Theme:
+  %THEME%
+
+# You can enumerate files via [*FileName1*, *FileName2*, ...] or using
+# - *FileName1*
+# - *FileName2*
+# - ...
+FilesToProcessPaths:
+  - %FILE_NAME%
+
+RepositoryURL:
+  %REPOSITORY_URL%
+
+# If you need brief markdown description for each
+# of listed files enter 1, otherwise leave zero
+Markdown:
+  0

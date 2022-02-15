@@ -11,12 +11,11 @@
 #include <regex>
 #include <string_view>
 
-#include "../Utils/Tokenizer.h"
-#include "../Utils/StringTools.h"
+#include "../Utils/Utils.h"
 
 //namespace fs = std::filesystem;
 
-namespace docgen
+namespace DocGen
 {
 
     enum class ObjectType
@@ -50,16 +49,28 @@ namespace docgen
 
         ObjectInfo();
 
-        void setType(ObjectType _type);
+        void setType(const ObjectType &_type);
 
         void setInfo(const InfoType &_type, const std::string &_doc);
 
         std::unordered_map<InfoType, std::string> getInfo() const;
 
-        static std::string infotype2string(InfoType _type);
+        static std::string infotype2string(const InfoType &_type);
 
+        /*!
+         * @brief deleting spcial symbols, such as '@' in doxygen style or '*' or "//" in comments
+         *
+         * @param str
+         * @return processed string
+         */
         static std::string commentPreprocessing(std::string str);
 
+        /*!
+         * @brief getting information about object (class, structure, method, etc) from commentaries before and inside the object
+         *
+         * @param code std::vector of tokens, created from text of code
+         * @param object_name name of object, information about function is about to find
+         */
         void findRequiredInfo(const std::vector<CodeParser::Token> &code, const size_t &object_idx);
     };
 
@@ -73,20 +84,31 @@ namespace docgen
 
         Documentation();
 
+        /*!
+         * @brief makes file structure using "sys/stat.h"
+         *
+         *  -> *project_name* -> doc -> objects -> class1.html, class2.html, ...
+         *                           -> index.html
+         *                           -> doc.md
+         *                           -> doc.pdf
+         */
         static void createDocFilesStructure();
 
         void makeMarkdown(const Documentation &objects);
 
         void makeHTML(const Documentation &objects);
 
+        /*!
+         * @brief the main function in document generation part
+         *
+         * @param PathToFile
+         */
         void createDocumentation(const std::string &PathToFile);
     };
 }
 
 namespace Constants
 {
-    using namespace std::literals;
-
     inline constexpr std::string_view objects_path = "docs/objects";
 
     inline constexpr std::string_view index_path = "docs/index.html";

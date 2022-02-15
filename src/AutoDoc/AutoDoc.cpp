@@ -1,30 +1,30 @@
 /*!
-    @author Kozulin Ilya
+    @author Ailurus
 */
 
 #include "AutoDoc.h"
 
-docgen::ObjectInfo::ObjectInfo()
+DocGen::ObjectInfo::ObjectInfo()
 {
     type = ObjectType::UNKNOWN;
 }
 
-void docgen::ObjectInfo::setType(ObjectType _type)
+void DocGen::ObjectInfo::setType(const ObjectType &_type)
 {
     type = _type;
 }
 
-void docgen::ObjectInfo::setInfo(const InfoType &_type, const std::string &_doc)
+void DocGen::ObjectInfo::setInfo(const InfoType &_type, const std::string &_doc)
 {
     info.insert(std::make_pair(_type, _doc));
 }
 
-std::unordered_map<docgen::InfoType, std::string> docgen::ObjectInfo::getInfo() const
+std::unordered_map<DocGen::InfoType, std::string> DocGen::ObjectInfo::getInfo() const
 {
     return info;
 }
 
-std::string docgen::ObjectInfo::infotype2string(docgen::InfoType _type)
+std::string DocGen::ObjectInfo::infotype2string(const DocGen::InfoType &_type)
 {
     switch (_type)
     {
@@ -54,13 +54,7 @@ std::string docgen::ObjectInfo::infotype2string(docgen::InfoType _type)
     }
 }
 
-/*!
- * @brief deleting spcial symbols, such as '@' in doxygen style or '*' or "//" in comments
- *
- * @param str
- * @return processed string
- */
-std::string docgen::ObjectInfo::commentPreprocessing(std::string str)
+std::string DocGen::ObjectInfo::commentPreprocessing(std::string str)
 {
     std::vector<std::string> symbols_to_delete = {"@", "//", " * ", "/*!", "*/", "/*"};
     for (const auto &it: symbols_to_delete)
@@ -69,13 +63,7 @@ std::string docgen::ObjectInfo::commentPreprocessing(std::string str)
     return str;
 }
 
-/*!
- * @brief getting information about object (class, structure, method, etc) from commentaries before and inside the object
- *
- * @param code std::vector of tokens, created from text of code
- * @param object_name name of object, information about function is about to find
- */
-void docgen::ObjectInfo::findRequiredInfo(const std::vector<CodeParser::Token> &code, const size_t &object_idx)
+void DocGen::ObjectInfo::findRequiredInfo(const std::vector<CodeParser::Token> &code, const size_t &object_idx)
 {
     size_t stop_idx = object_idx - 1;
     std::vector<CodeParser::Token> cur_object_with_info;
@@ -169,20 +157,12 @@ void docgen::ObjectInfo::findRequiredInfo(const std::vector<CodeParser::Token> &
     }
 }
 
-docgen::Documentation::Documentation()
+DocGen::Documentation::Documentation()
 {
     documentation = std::map<ObjectType, ObjectInfo>();
 }
 
-/*!
- * @brief makes file structure using "sys/stat.h"
- *
- *  -> *project_name* -> doc -> objects -> class1.html, class2.html, ...
- *                           -> index.html
- *                           -> doc.md
- *                           -> doc.pdf
- */
-void docgen::Documentation::createDocFilesStructure()
+void DocGen::Documentation::createDocFilesStructure()
 {
 //    fs::create_directories(Constants::objects_path);
 //    std::ofstream index(Constants::index_path);
@@ -202,18 +182,18 @@ void docgen::Documentation::createDocFilesStructure()
 //    menu_pattern.close();
 }
 
-void docgen::Documentation::makeMarkdown(const Documentation &objects)
+void DocGen::Documentation::makeMarkdown(const Documentation &objects)
 {
 
 }
 
-void docgen::Documentation::makeHTML(const docgen::Documentation &objects)
+void DocGen::Documentation::makeHTML(const DocGen::Documentation &objects)
 {
 
 }
 
 
-void docgen::Documentation::createDocumentation(const std::string &PathToFile)
+void DocGen::Documentation::createDocumentation(const std::string &PathToFile)
 {
 
 }

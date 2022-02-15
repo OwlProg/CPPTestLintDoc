@@ -1,8 +1,9 @@
 /*!
-    @author Kozulin Ilya
+    @author Ailurus
 */
 
-#include "Tokenizer.h"
+
+#include "Utils.h"
 
 CodeParser::Token::Token()
 {
@@ -442,7 +443,7 @@ void CodeParser::Token::setClassNameTokenTypes(std::vector<Token> &tokens)
 
 
 std::vector<CodeParser::Token>
-CodeParser::Token::TokenizeText(const std::string &code, bool spaces, bool tabs, bool new_lines, bool combine_keywords, bool combine_comments, bool combine_types,
+CodeParser::Token::tokenizeText(const std::string &code, bool spaces, bool tabs, bool new_lines, bool combine_keywords, bool combine_comments, bool combine_types,
                                 bool combine_operators)
 {
     std::vector<CodeParser::Token> Tokens;
@@ -551,16 +552,131 @@ CodeParser::Token::TokenizeText(const std::string &code, bool spaces, bool tabs,
 }
 
 std::vector<CodeParser::Token>
-CodeParser::Token::TokenizeFile(const std::string &FileName, bool spaces, bool tabs, bool new_lines, bool combine_keywords, bool combine_comments, bool combine_types,
+CodeParser::Token::tokenizeFile(const std::string &FilePath, bool spaces, bool tabs, bool new_lines, bool combine_keywords, bool combine_comments, bool combine_types,
                                 bool combine_operators)
 {
     std::ifstream file;
-    file.open(FileName);
+    file.open(FilePath);
 
     std::stringstream temp;
     temp << file.rdbuf();
 
     std::string code = temp.str();
 
-    return TokenizeText(code, spaces, tabs, new_lines, combine_keywords, combine_comments, combine_types, combine_operators);
+    return tokenizeText(code, spaces, tabs, new_lines, combine_keywords, combine_comments, combine_types, combine_operators);
+}
+
+char const *Exceptions::ExceptionWithDescription::what() const noexcept
+{
+    return message.c_str();
+}
+
+void StringTools::replaceAll(std::string &data, const std::string &toSearch, const std::string &replaceStr)
+{
+    size_t pos = data.find(toSearch);
+    while (pos != std::string::npos)
+    {
+        data.replace(pos, toSearch.size(), replaceStr);
+        pos = data.find(toSearch, pos + replaceStr.size());
+    }
+}
+
+std::string StringTools::findNextWord(const std::string &str, const size_t &idx)
+{
+    size_t stringSize = str.size(), firstWordEnd = idx, newWordStart = idx;
+    std::string nextWord;
+    bool firstWordEnded = false, secondWordStarted = false;
+    for (size_t i = idx; i < stringSize; i++)
+    {
+        bool flag = false;
+        for (size_t j = 0; j < Constants::numberOfSpecialYamlSymbols; j++)
+        {
+            if (str[i] == Constants::specialYamlSymbols[j])
+            {
+                if (!firstWordEnded)
+                {
+                    firstWordEnded = true;
+                    break;
+                }
+                if (secondWordStarted)
+                {
+                    return nextWord;
+                }
+                flag = true;
+            }
+        }
+        if (!flag)
+        {
+            if (secondWordStarted)
+            {
+                nextWord.push_back(str[i]);
+            }
+            if (firstWordEnded && !secondWordStarted)
+            {
+                secondWordStarted = true;
+            }
+        }
+    }
+}
+
+std::string Config::configDataType2string(const Config::ConfigDatatype &configDatatype)
+{
+    switch (configDatatype)
+    {
+        case ConfigDatatype::PROJECT_NAME:
+            return "ProjectName";
+
+        case ConfigDatatype::ROOT_PATH:
+            return "RootPath";
+
+        case ConfigDatatype::LOGO_PATH:
+            return "LogoPath";
+
+        case ConfigDatatype::THEME:
+            return "Theme";
+
+        case ConfigDatatype::FILES_TO_PROCESS_PATHS:
+            return "FilesToProcessPaths";
+
+        case ConfigDatatype::REPOSITORY_URL:
+            return "RepositoryURL";
+
+        case ConfigDatatype::MD_FLAG:
+            return "Markdown";
+
+        default:
+            return "Unknown";
+    }
+}
+
+std::unordered_map<Config::ConfigDatatype, std::string> Config::processConfig()
+{
+    std::unordered_map<Config::ConfigDatatype, std::string> config;
+    std::ifstream file;
+    file.open(std::string(Constants::config_path));
+
+    std::stringstream temp;
+    temp << file.rdbuf();
+
+    std::string configContent = temp.str();
+    std::string allConfigDatatypes;
+    for (const Config::ConfigDatatype &datatype: Config::configDatatypes)
+    {
+        allConfigDatatypes.append(configDataType2string(datatype) + ", ");
+    }
+
+    for (const Config::ConfigDatatype &datatype: Config::configDatatypes)
+    {
+        size_t idx = configContent.find(configDataType2string(datatype));
+
+        if (idx != std::string::npos)
+        {
+            config[datatype] = StringTools::findNextWord(configContent, idx);
+        }
+        else
+        {
+            throw Exceptions::ExceptionWithDescription(
+                    std::string(Constants::config_error_start) + configDataType2string(datatype) + std::string(Constants::config_error_end));
+        }
+    }
 }
