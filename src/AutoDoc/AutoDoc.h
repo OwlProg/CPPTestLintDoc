@@ -5,15 +5,12 @@
 #ifndef CPPTESTLINTDOC_AUTODOC_H
 #define CPPTESTLINTDOC_AUTODOC_H
 
-//#include <experimental/filesystem>
 #include <unordered_map>
 #include <map>
 #include <regex>
 #include <string_view>
 
 #include "../Utils/Utils.h"
-
-//namespace fs = std::filesystem;
 
 namespace DocGen
 {
@@ -85,17 +82,17 @@ namespace DocGen
         Documentation();
 
         /*!
-         * @brief makes file structure using "sys/stat.h"
+         * @brief makes a brief documentation in .md file
          *
-         *  -> *project_name* -> doc -> objects -> class1.html, class2.html, ...
-         *                           -> index.html
-         *                           -> doc.md
-         *                           -> doc.pdf
+         * @param objects
          */
-        static void createDocFilesStructure();
-
         void makeMarkdown(const Documentation &objects);
 
+        /*!
+         * @brief makes an HTML page by a pattern for current objects
+         *
+         * @param objects
+         */
         void makeHTML(const Documentation &objects);
 
         /*!
@@ -103,7 +100,7 @@ namespace DocGen
          *
          * @param PathToFile
          */
-        void createDocumentation(const std::string &PathToFile);
+        void createDocumentation(const std::string &PathToFile, const std::unordered_map<Config::ConfigDatatype, std::string> &config);
     };
 }
 

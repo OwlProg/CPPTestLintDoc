@@ -1,11 +1,17 @@
+# Please, specify paths in quotation marks
+
 ProjectName:
   %PROJECT_NAME%
 
 RootPath:
-  %ROOT_PATH%
+  "%ROOT_PATH%"
 
 LogoPath:
-  %LOGO_PATH%
+  "%LOGO_PATH%"
+
+# Enter a path to the directory where you want to save generated documentation
+DocumentaionPath:
+  "%DOCUMENTATION_PATH%"
 
 # Choose Dark or Light
 Theme:
@@ -16,7 +22,8 @@ Theme:
 # - *FileName2*
 # - ...
 FilesToProcessPaths:
-  - %FILE_NAME%
+  - "%FILE_NAME1%"
+  - "%FILE_NAME2%"
 
 RepositoryURL:
   %REPOSITORY_URL%

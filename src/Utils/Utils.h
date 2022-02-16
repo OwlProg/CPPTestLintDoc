@@ -17,10 +17,9 @@
 #include <cctype>
 #include <unordered_set>
 
-namespace CodeParser
-{
-    enum class TokenType
-    {
+namespace CodeParser {
+
+    enum class TokenType {
         TYPENAME,
         LITERAL,
         KEYWORD,
@@ -42,8 +41,10 @@ namespace CodeParser
         UNKNOWN
     };
 
-    class Token
-    {
+    std::string type2string(const TokenType &tokenType);
+
+    class Token {
+
     private:
 
         TokenType token_type;
@@ -56,15 +57,13 @@ namespace CodeParser
 
         explicit Token(const std::string &str);
 
-        std::string type() const;
-
         std::string getToken() const;
 
         TokenType getType() const;
 
         void setToken(const std::string &str);
 
-        void setType(const TokenType &_type);
+        void setType(const TokenType &type);
 
         /*!
          * @brief finds vector of names of user types in the code
@@ -184,8 +183,7 @@ namespace CodeParser
     };
 }
 
-namespace Constants
-{
+namespace Constants {
     constexpr size_t numberOfKeywords = 65, numberOfTypenames = 26, numberOfOperators = 18, numberOfSpecialYamlSymbols = 8, numberOfConfigDatatypes = 7;
 
     const std::array<std::string, numberOfKeywords> keywords = {"alignas", "alignof", "__asm", "break", "case", "catch", "class", "concept", "const", "constexpr",
@@ -202,22 +200,24 @@ namespace Constants
 
     const std::array<std::string, numberOfOperators> operators = {"+", "-", "=", "*", "&", "|", "^", "%", "?", ":", "=", "<", ">", "/", "!", "~", ".", ","};
 
-    const std::array<char, numberOfSpecialYamlSymbols> specialYamlSymbols = {',', ' ', '\n', '\t', ':', '[', ']', '-'};
+    const std::array<char, numberOfSpecialYamlSymbols> specialYamlSymbols = {',', ' ', '\n', '\t', ':', '[', '-'};
 
-    inline constexpr std::string_view config_path = "../config.yml";
+    inline constexpr std::string_view config_path = "config.yml";
 
-    inline constexpr std::string_view config_error_start = "An error was detected during the processing of the config.yaml: ";
+    inline constexpr std::string_view config_arguement_not_found_error_start = "An error was detected during the processing of the config.yaml: ";
 
-    inline constexpr std::string_view config_error_end = "not found.\nPlease check that the following items are present in the configuration file: ";
+    inline constexpr std::string_view config_arguement_not_found_error_end = " not found.\nPlease check that the following items are present in the configuration file: ";
+
+    inline constexpr std::string_view config_quotes_error = "The number of quotation marks is odd. Please, check the correctness of entered data (paths must be enclosed in quotation marks)";
+
+    inline constexpr std::string_view config_paths_processing_error = "Something went wrong. Please check the structure of config. Remember, all paths must be inside quote marks and enumerated in [] or with '-' on a few lines";
 }
 
-namespace Exceptions
-{
+namespace Exceptions {
     /*!
      * @brief just calling an exception with the given description
      */
-    class ExceptionWithDescription: public std::exception
-    {
+    class ExceptionWithDescription: public std::exception {
     private:
 
         std::string message;
@@ -229,16 +229,14 @@ namespace Exceptions
          *
          * @param message a string to show
          */
-        explicit ExceptionWithDescription(std::string message): message(std::move(message))
-        {}
+        explicit ExceptionWithDescription(std::string message): message(std::move(message)) {}
 
         [[nodiscard]] char const *what() const noexcept override;
 
     };
 }
 
-namespace StringTools
-{
+namespace StringTools {
     /*!
      * @brief replace all occurrences of a substring in a string
      *
@@ -253,15 +251,13 @@ namespace StringTools
      *
      * @param str a string where to find word
      * @param idx an index of word the previous to that you want to get
-     * @return the next word
+     * @return the pair of the next value and its start index
      */
-    std::string findNextWord(const std::string &str, const size_t &idx);
+    std::pair<std::string, size_t> findNextWord(const std::string &str, const size_t &idx);
 }
 
-namespace Config
-{
-    enum class ConfigDatatype
-    {
+namespace Config {
+    enum class ConfigDatatype {
         PROJECT_NAME,
         ROOT_PATH,
         LOGO_PATH,
@@ -278,6 +274,15 @@ namespace Config
                                                                                                 ConfigDatatype::MD_FLAG};
 
     std::string configDataType2string(const ConfigDatatype &configDatatype);
+
+    /*!
+     * @brief separate processing of paths
+     *
+     * @param str a string where to find paths
+     * @param idx an index of a key
+     * @return vector of paths
+     */
+    std::vector<std::string> getAllEnumeratedPaths(const std::string &str, const size_t &idx);
 
     /*!
      * @brief gets all the values for all known keys of config file
