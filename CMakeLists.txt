@@ -4,7 +4,7 @@ project(CPPTestLintDoc)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(CPPTestLintDoc main.cpp src/AutoDoc/AutoDoc.cpp src/AutoDoc/AutoDoc.h src/Utils/Utils.cpp src/Utils/Utils.h config.yml src/AutoDoc/RunAutoDoc.cpp)
+add_executable(CPPTestLintDoc main.cpp AutoDoc/AutoDoc.cpp AutoDoc/AutoDoc.h Utils/Utils.cpp Utils/Utils.h config.yml AutoDoc/RunAutoDoc.cpp)
 
 
 # AutoDoc DEBUG

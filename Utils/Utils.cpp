@@ -99,7 +99,7 @@ CodeParser::Token::Token(const std::string &str) {
     token_value = str;
 }
 
-std::string type2string(const CodeParser::TokenType &tokenType) {
+std::string CodeParser::type2string(const CodeParser::TokenType &tokenType) {
     switch (tokenType) {
         case CodeParser::TokenType::TYPENAME:
             return "typename";
