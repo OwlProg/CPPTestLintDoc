@@ -10,7 +10,9 @@
 #include <regex>
 #include <string_view>
 
-#include "../Utils/Utils.h"
+#include "../Utils/Tokenizer.h"
+#include "../Utils/StringTools.h"
+#include "../Utils/ConfigProcessing.h"
 
 namespace DocGen
 {
