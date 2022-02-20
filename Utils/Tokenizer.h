@@ -1,7 +1,6 @@
 /*!
-    @author Kozulin Ilya
-    @brief utility for easy code parsing
-*/
+ *  @author Ailurus
+ */
 
 #ifndef CPPTESTLINTDOC_TOKENIZER_H
 #define CPPTESTLINTDOC_TOKENIZER_H
@@ -9,17 +8,17 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <algorithm>
-#include <cctype>
 #include <fstream>
 #include <sstream>
+#include <string_view>
 #include <unordered_map>
+#include <cctype>
 #include <unordered_set>
+#include <algorithm>
 
-namespace CodeParser
-{
-    enum class TokenType
-    {
+namespace CodeParser {
+
+    enum class TokenType {
         TYPENAME,
         LITERAL,
         KEYWORD,
@@ -41,8 +40,10 @@ namespace CodeParser
         UNKNOWN
     };
 
-    class Token
-    {
+    std::string type2string(const TokenType &tokenType);
+
+    class Token {
+
     private:
 
         TokenType token_type;
@@ -55,15 +56,13 @@ namespace CodeParser
 
         explicit Token(const std::string &str);
 
-        std::string type() const;
-
         std::string getToken() const;
 
         TokenType getType() const;
 
         void setToken(const std::string &str);
 
-        void setType(const TokenType &_type);
+        void setType(const TokenType &type);
 
         /*!
          * @brief finds vector of names of user types in the code
@@ -74,7 +73,7 @@ namespace CodeParser
         static std::vector<std::string> findUserTypes(const std::vector<Token> &tokens);
 
         /*!
-         * @brief sets token with any user type tokentype "USER_TYPE" instead of "UNKNOWN"
+         * @brief sets token with any user type token type "USER_TYPE" instead of "UNKNOWN"
          *
          * @param tokens vector of tokens processed from code
          * @param user_types vector of names of user types
@@ -113,7 +112,7 @@ namespace CodeParser
         static void combineComments(std::vector<Token> &tokens);
 
         /*!
-         * @brief combines each pair of consecutive tokens with typenames ("unsigned", "long", "long" -> "unsigned long long")
+         * @brief combines each pair of consecutive tokens with type names ("unsigned", "long", "long" -> "unsigned long long")
          *
          * @param tokens std::vector of tokens made from text of code
          */
@@ -127,7 +126,7 @@ namespace CodeParser
         static void combineOperators(std::vector<Token> &tokens);
 
         /*!
-         * @brief emplaces currnet token taking into account oportunity of having an empty string or having a semicolon in string which actually makes
+         * @brief emplace current token taking into account opportunity of having an empty string or having a semicolon in string which actually makes
          *        it two different tokens
          *
          * @param tokens vector of tokens generated from the code
@@ -158,50 +157,48 @@ namespace CodeParser
          * @param new_lines flag if it is necessary to process line breaks ("\n") as separate tokens
          * @param combineKeywords flag if it is necessary to combine keywords ("static", "void" -> "static void")
          * @param combineComments flag if it is necessary to combine comments ("//", "comment1" -> "// comment1")
-         * @param combineTypes flag if it is necessary to combine typenames ("unsigned", "long", "long" -> "unsigned long long")
+         * @param combineTypes flag if it is necessary to combine type names ("unsigned", "long", "long" -> "unsigned long long")
          * @param combineOperators flag if it is necessary to combine operators ("+", "=" -> "+=")
          * @return std::vector of tokens
          */
-        static std::vector<Token> TokenizeText(const std::string &code, bool spaces = false, bool tabs = false, bool new_lines = false, bool combine_keywords = false,
+        static std::vector<Token> tokenizeText(const std::string &code, bool spaces = false, bool tabs = false, bool new_lines = false, bool combine_keywords = false,
                                                bool combine_comments = false, bool combine_types = false, bool combine_operators = false);
 
         /*!
          * @brief makes from a text of code vector of tokens
          *
-         * @param FileName file with code to tokenize
+         * @param FilePath file with code to tokenize
          * @param spaces flag if it is necessary to process spaces (" ") as separate tokens
          * @param tabs flag if it is necessary to process tabs ("\t") as separate tokens
          * @param new_lines flag if it is necessary to process line breaks ("\n") as separate tokens
          * @param combine_keywords flag if it is necessary to combine keywords ("static", "void" -> "static void")
          * @param combine_comments flag if it is necessary to combine comments ("//", "comment1" -> "// comment1")
-         * @param combine_types flag if it is necessary to combine typenames ("unsigned", "long", "long" -> "unsigned long long")
+         * @param combine_types flag if it is necessary to combine type names ("unsigned", "long", "long" -> "unsigned long long")
          * @param combine_operators flag if it is necessary to combine operators ("+", "=" -> "+=")
          * @return std::vector of tokens
          */
-        static std::vector<Token> TokenizeFile(const std::string &FileName, bool spaces = false, bool tabs = false, bool new_lines = false, bool combine_keywords = false,
+        static std::vector<Token> tokenizeFile(const std::string &FilePath, bool spaces = false, bool tabs = false, bool new_lines = false, bool combine_keywords = false,
                                                bool combine_comments = false, bool combine_types = false, bool combine_operators = false);
     };
 }
 
-namespace Constants
-{
-    constexpr size_t number_of_keywords = 65, number_of_typenames = 26, number_of_operators = 18;
+namespace Constants {
+    constexpr size_t numberOfKeywords = 65, numberOfTypenames = 26, numberOfOperators = 18;
 
-    const std::array<std::string, number_of_keywords> keywords = {"alignas", "alignof", "__asm", "break", "case", "catch", "class", "concept", "const", "constexpr",
-                                                                  "consteval", "constinit", "continue", "const_case", "co_await", "co_return", "co_yield", "decltype",
-                                                                  "default", "delete", "do", "dynamic_cast", "else", "enum", "explicit", "export", "extern", "false",
-                                                                  "for", "friend", "goto", "if", "inline", "mutable", "namespace", "new", "noexcept", "operator",
-                                                                  "private", "public", "protected", "register", "reinterpret_cast", "requires", "return", "sizeof",
-                                                                  "static", "static_assert", "static_cast", "struct", "switch", "template", "typename", "this",
-                                                                  "thread_local", "throw", "true", "try", "typedef", "typeid", "using", "union", "virtual", "override",
-                                                                  "while"};
+    const std::array<std::string, numberOfKeywords> keywords = {"alignas", "alignof", "__asm", "break", "case", "catch", "class", "concept", "const", "constexpr",
+                                                                "consteval", "constinit", "continue", "const_case", "co_await", "co_return", "co_yield", "decltype",
+                                                                "default", "delete", "do", "dynamic_cast", "else", "enum", "explicit", "export", "extern", "false", "for",
+                                                                "friend", "goto", "if", "inline", "mutable", "namespace", "new", "noexcept", "operator", "private",
+                                                                "public", "protected", "register", "reinterpret_cast", "requires", "return", "sizeof", "static",
+                                                                "static_assert", "static_cast", "struct", "switch", "template", "typename", "this", "thread_local",
+                                                                "throw", "true", "try", "typedef", "typeid", "using", "union", "virtual", "override", "while"};
 
-    const std::array<std::string, number_of_typenames> typenames = {"bool", "char", "signed", "unsigned", "wchar_t", "char16_t", "char32_t", "short", "int", "long",
-                                                                    "float", "double", "void", "auto", "char8_t", "nullptr", "size_t", "volatile", "int8_t", "uint8_t",
-                                                                    "int16_t", "uint16_t", "int32_t", "uint32_t", "int64_t", "uint64_t"};
+    const std::array<std::string, numberOfTypenames> typenames = {"bool", "char", "signed", "unsigned", "wchar_t", "char16_t", "char32_t", "short", "int", "long",
+                                                                  "float", "double", "void", "auto", "char8_t", "nullptr", "size_t", "volatile", "int8_t", "uint8_t",
+                                                                  "int16_t", "uint16_t", "int32_t", "uint32_t", "int64_t", "uint64_t"};
 
-    const std::array<std::string, number_of_operators> operators = {"+", "-", "=", "*", "&", "|", "^", "%", "?", ":", "=", "<", ">", "/", "!", "~", ".", ","};
+    const std::array<std::string, numberOfOperators> operators = {"+", "-", "=", "*", "&", "|", "^", "%", "?", ":", "=", "<", ">", "/", "!", "~", ".", ","};
+
 }
-
 
 #endif //CPPTESTLINTDOC_TOKENIZER_H
