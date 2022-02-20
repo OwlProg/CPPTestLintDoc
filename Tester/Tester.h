@@ -16,6 +16,10 @@ class Tester {
             ERROR
         };
 
+        template <typename T> bool isNullType() {
+            return (std::is_same<T, std::nullptr_t>::value);
+        }
+
         template <typename T> bool isIntegerType() {
             return (std::is_same<T, short int>::value ||
                     std::is_same<T, unsigned short int>::value ||
@@ -62,8 +66,20 @@ class Tester {
             }
         }
 
+        template <typename T> void checkWithoutWarning(T* result, T* expectedResult) {
+            if (result == expectedResult) {
+                printUnitResult<T>(UnitResult::PASS);
+            }
+            else {
+                printUnitResult(UnitResult::ERROR, result, expectedResult);
+            }
+        }
+
     public:
 
+        /*
+         * Truthiness methods
+         */
         template <typename T> void ToEqual(T result, T expectedResult, double EPS = 1e-4) {
             if (isRealType<T>()) {
                 if (fabs(result - expectedResult) < EPS) {
@@ -73,21 +89,29 @@ class Tester {
                     } else {
                         printUnitResult<T>(UnitResult::PASS);
                     }
-                }
-                else {
+                } else {
                     printUnitResult(UnitResult::ERROR, result, expectedResult);
                 }
-            }
-            else {
-                if (result == expectedResult) {
-                    printUnitResult<T>(UnitResult::PASS);
-
-                }
-                else {
-                    printUnitResult(UnitResult::ERROR, result, expectedResult);
-                }
+            } else if (isIntegerType<T>()) {
+                checkWithoutWarning(result, expectedResult);
+            } else if (isStringType<T>()) {
+                checkWithoutWarning(result, expectedResult);
+            } else if (isBoolType<T>()) {
+                checkWithoutWarning(result, expectedResult);
+            } else if (isNullType<T>()) {
+                checkWithoutWarning(result, expectedResult);
             }
         }
+
+//        template <typename T> void ToCompare(std::string sign, T result, T expectedResult, double EPS = 1e-4) {
+//            switch (sign) {
+//                case "==":
+//
+//                    break;
+//                default:
+//            }
+//        }
+
 };
 
 void describe(const std::string& description, void (*function)() = nullptr);

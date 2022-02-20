@@ -15,11 +15,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="af5e52e0-f83a-4bec-ae8a-5b9ef46aeeeb" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/Tester/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/Tester/Makefile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Tester/Tester.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Tester/Tester.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Tester/Tester.h" beforeDir="false" afterPath="$PROJECT_DIR$/Tester/Tester.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Tester/math.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Tester/math.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Tester/math.test.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Tester/math.test.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,7 +95,8 @@
       <workItem from="1644527785230" duration="3775000" />
       <workItem from="1644667398008" duration="4977000" />
       <workItem from="1644672604718" duration="3656000" />
-      <workItem from="1644698416968" duration="3528000" />
+      <workItem from="1644698416968" duration="4473000" />
+      <workItem from="1645375371951" duration="5203000" />
     </task>
     <servers />
   </component>
