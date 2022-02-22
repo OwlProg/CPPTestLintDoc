@@ -73,12 +73,20 @@ namespace CodeParser {
         static std::vector<std::string> findUserTypes(const std::vector<Token> &tokens);
 
         /*!
-         * @brief sets token with any user type token type "USER_TYPE" instead of "UNKNOWN"
+         * @brief finds vector of names of types that are not defined in the current file
+         *
+         * @param tokens
+         * @return vector of names of user types
+         */
+        static void findAndCombineExternalTypesAndFunctions(std::vector<Token> &tokens);
+
+        /*!
+         * @brief sets token with any user type token type "TYPENAME" instead of "UNKNOWN" and the same for some types that are not defined in current file
          *
          * @param tokens vector of tokens processed from code
          * @param user_types vector of names of user types
          */
-        static void setUserTokenTypes(std::vector<Token> &tokens, const std::vector<std::string> &user_types);
+        static void setUserTokenTypes(std::vector<Token> &tokens, const std::vector<std::string> &userTypes);
 
         /*!
          * @brief makes from two tokens one combined if they have the same token type, else returns empty token
