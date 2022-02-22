@@ -176,23 +176,58 @@ void CodeParser::Token::setType(const CodeParser::TokenType &type) {
 }
 
 std::vector<std::string> CodeParser::Token::findUserTypes(const std::vector<Token> &tokens) {
-    std::vector<std::string> user_types;
+    std::vector<std::string> userTypes;
 
     for (int i = 1; i < tokens.size(); i++) {
         if ((tokens[i - 1].getType() == TokenType::CLASS_DEF || tokens[i - 1].getType() == TokenType::STRUCT_DEF || tokens[i - 1].getType() == TokenType::UNION_DEF ||
              tokens[i - 1].getType() == TokenType::ENUM_DEF || tokens[i - 1].getToken() == "enum class") && tokens[i].getType() == TokenType::UNKNOWN) {
-            user_types.emplace_back(tokens[i].getToken());
+            userTypes.emplace_back(tokens[i].getToken());
         }
     }
 
-    return user_types;
+    return userTypes;
 }
 
-void CodeParser::Token::setUserTokenTypes(std::vector<Token> &tokens, const std::vector<std::string> &user_types) {
-    for (auto &token : tokens)
-        if (std::find(user_types.begin(), user_types.end(), token.getToken()) != user_types.end() && token.getType() == TokenType::UNKNOWN) {
+void CodeParser::Token::findAndCombineExternalTypesAndFunctions(std::vector<Token> &tokens) {
+    size_t tokensLen = tokens.size();
+
+    for (size_t i = 0; i < tokensLen - 2; i++) {
+        if (tokens[i].getType() == CodeParser::TokenType::UNKNOWN && tokens[i + 1].getType() == CodeParser::TokenType::OPERATOR && tokens[i + 1].getToken() == "::" &&
+            tokens[i + 2].getType() == CodeParser::TokenType::UNKNOWN) {
+            bool openBracketFound = false;
+            for (size_t j = i + 2; j < tokensLen; j++) {
+                if (tokens[j].getType() == CodeParser::TokenType::SEMICOLON) {
+                    break;
+                }
+                if (tokens[j].getToken() == "(") {
+                    openBracketFound = true;
+                    break;
+                }
+                if (tokens[j].getToken() == "<" || tokens[j].getToken() == ">") { // -> template class found
+                    break;
+                }
+            }
+            tokens[i].setToken(tokens[i].getToken() + tokens[i + 1].getToken() + tokens[i + 2].getToken());
+            if (!openBracketFound) {
+                tokens[i].setType(CodeParser::TokenType::TYPENAME);
+                tokens.erase(tokens.begin() + i + 2);
+                tokens.erase(tokens.begin() + i + 1);
+            }
+            else {
+                tokens[i].setType(CodeParser::TokenType::FUNCTION_NAME);
+                tokens.erase(tokens.begin() + i + 2);
+                tokens.erase(tokens.begin() + i + 1);
+            }
+        }
+    }
+}
+
+void CodeParser::Token::setUserTokenTypes(std::vector<Token> &tokens, const std::vector<std::string> &userTypes) {
+    for (auto &token : tokens) {
+        if (std::find(userTypes.begin(), userTypes.end(), token.getToken()) != userTypes.end() && token.getType() == TokenType::UNKNOWN) {
             token.setType(TokenType::TYPENAME);
         }
+    }
 }
 
 CodeParser::Token CodeParser::Token::joinTokens(const CodeParser::Token &token1, const CodeParser::Token &token2, bool space) {
@@ -318,7 +353,10 @@ void CodeParser::Token::combineOperators(std::vector<CodeParser::Token> &tokens)
 
 void CodeParser::Token::addToken(std::vector<CodeParser::Token> &tokens, const std::string &token) {
     if (!token.empty()) {
-        if (token.find(';') != std::string::npos && token.size() > 1) {
+        if (token[0] == '"' && token[token.size() - 1] == '"') {
+            tokens.emplace_back(Token(token));
+        }
+        else if (token.find(';') != std::string::npos && token.size() > 1) {
             std::string str1 = token.substr(0, token.size() - 1), str2 = ";";
             addToken(tokens, str1);
             tokens.emplace_back(Token(str2));
@@ -327,7 +365,7 @@ void CodeParser::Token::addToken(std::vector<CodeParser::Token> &tokens, const s
             tokens.emplace_back(Token(token));
         }
         else {
-            size_t operator_idx = -1;
+            int operator_idx = -1;
             for (size_t i = 0; i < token.size(); i++) {
                 if (std::find(Constants::operators.begin(), Constants::operators.end(), std::string(1, token[i])) != Constants::operators.end()) {
                     operator_idx = i;
@@ -386,19 +424,24 @@ void CodeParser::Token::setClassNameTokenTypes(std::vector<Token> &tokens) {
         if (std::find(class_names.begin(), class_names.end(), tokens[i].getToken()) != class_names.end()) {
             tokens[i].setType(TokenType::TYPENAME);
         }
-        else if (tokens[i].getType() == TokenType::UNKNOWN && tokens[i + 1].getToken() == "<" && tokens[i + 2].getType() == TokenType::TYPENAME &&
-                 tokens[i + 3].getToken() == ">") {
+        else if (tokens[i].getType() == TokenType::UNKNOWN && tokens[i + 1].getToken() == "<" && tokens[i + 2].getType() == TokenType::TYPENAME) {
             tokens[i].setType(TokenType::TYPENAME);
             class_names.insert(tokens[i].getToken());
         }
     }
 
     for (size_t i = 0; i < tokens.size() - 3; i++) {
-        if (std::find(class_names.begin(), class_names.end(), tokens[i].getToken()) != class_names.end() && tokens[i + 1].getToken() == "<" &&
-            tokens[i + 2].getType() == TokenType::TYPENAME && tokens[i + 3].getToken() == ">") {
-            tokens[i].setToken(tokens[i].getToken() + tokens[i + 1].getToken() + tokens[i + 2].getToken() + tokens[i + 3].getToken());
+        if ((std::find(class_names.begin(), class_names.end(), tokens[i].getToken()) != class_names.end() || tokens[i].getType() == TokenType::TYPENAME) &&
+            tokens[i + 1].getToken() == "<" && tokens[i + 2].getType() == TokenType::TYPENAME) {
+            int j = i + 1;
+            while (tokens[j].getToken() != ">") {
+                tokens[i].setToken(tokens[i].getToken() + tokens[j].getToken());
+                j++;
+            }
+            tokens[i].setToken(tokens[i].getToken() + tokens[j].getToken());
             tokens[i].setType(TokenType::TYPENAME);
-            tokens.erase(tokens.begin() + i + 1, tokens.begin() + i + 4);
+
+            tokens.erase(tokens.begin() + i + 1, tokens.begin() + j + 1);
         }
     }
 }
@@ -445,8 +488,8 @@ CodeParser::Token::tokenizeText(const std::string &code, bool spaces, bool tabs,
                     tokens.emplace_back(Token("\t"));
                 }
             }
-            else if (std::find(Constants::operators.begin(), Constants::operators.end(), std::to_string(i)) != Constants::operators.end() || i == '(' || i == ')' ||
-                     i == '[' || i == ']' || i == '{' || i == '}') {
+            else if (std::find(Constants::operators.begin(), Constants::operators.end(), std::to_string(i)) != Constants::operators.end() || i == '(' || i == ')' || i == '[' ||
+                     i == ']' || i == '{' || i == '}') {
                 if (!temp.empty()) {
                     addToken(tokens, temp);
                     temp.clear();
@@ -500,12 +543,14 @@ CodeParser::Token::tokenizeText(const std::string &code, bool spaces, bool tabs,
     if (combine_operators) {
         combineOperators(tokens);
     }
+
+    findAndCombineExternalTypesAndFunctions(tokens);
+    setUserTokenTypes(tokens, findUserTypes(tokens));
+    setClassNameTokenTypes(tokens);
+
     if (combine_types) {
         combineTypes(tokens);
     }
-
-    setUserTokenTypes(tokens, findUserTypes(tokens));
-    setClassNameTokenTypes(tokens);
     setVariablesAndFunctionsTokenTypes(tokens);
 
     return tokens;

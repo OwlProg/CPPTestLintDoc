@@ -36,6 +36,8 @@ namespace DocGen
         UNKNOWN
     };
 
+    std::string infotype2string(const InfoType &infoType);
+
     class ObjectInfo
     {
     protected:
@@ -54,8 +56,6 @@ namespace DocGen
 
         std::unordered_map<InfoType, std::string> getInfo() const;
 
-        static std::string infotype2string(const InfoType &_type);
-
         /*!
          * @brief deleting spcial symbols, such as '@' in doxygen style or '*' or "//" in comments
          *
@@ -65,12 +65,12 @@ namespace DocGen
         static std::string commentPreprocessing(std::string str);
 
         /*!
-         * @brief getting information about object (class, structure, method, etc) from commentaries before and inside the object
+         * @brief constructor for getting information about object (class, structure, method, etc) from commentaries before and inside the object
          *
          * @param code std::vector of tokens, created from text of code
          * @param object_name name of object, information about function is about to find
          */
-        void findRequiredInfo(const std::vector<CodeParser::Token> &code, const size_t &object_idx);
+         ObjectInfo(const std::vector<CodeParser::Token> &code, const size_t &object_idx);
     };
 
     class Documentation
