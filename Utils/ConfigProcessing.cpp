@@ -33,6 +33,18 @@ std::string Config::configDataType2string(const Config::ConfigDatatype &configDa
     }
 }
 
+std::string Config::readConfig(const std::string &configPath) {
+    std::unordered_map<Config::ConfigDatatype, std::string> config;
+    std::ifstream file;
+    std::string path = std::string(Constants::config_path);
+    file.open(std::string(Constants::config_path), std::ifstream::in);
+
+    std::stringstream temp;
+    temp << file.rdbuf();
+
+    return temp.str();
+}
+
 std::vector<std::string> Config::getAllEnumeratedPaths(const std::string &str, const size_t &idx) {
     size_t stringSize = str.size();
     int endOfPathEnumeration = -1;
@@ -146,17 +158,8 @@ std::pair<std::string, size_t> Config::findNextWord(const std::string &str, cons
     return nextWord;
 }
 
-std::unordered_map<Config::ConfigDatatype, std::string> Config::processConfig() {
-
+std::unordered_map<Config::ConfigDatatype, std::string> Config::processConfig(const std::string &configContent) {
     std::unordered_map<Config::ConfigDatatype, std::string> config;
-    std::ifstream file;
-    std::string path = std::string(Constants::config_path);
-    file.open(std::string(Constants::config_path), std::ifstream::in);
-
-    std::stringstream temp;
-    temp << file.rdbuf();
-
-    std::string configContent = temp.str();
     size_t configSize = configContent.size();
     std::string allConfigDatatypes;
     for (const Config::ConfigDatatype &datatype: Config::configDatatypes) {
@@ -185,6 +188,5 @@ std::unordered_map<Config::ConfigDatatype, std::string> Config::processConfig() 
                                                        std::string(Constants::config_arguement_not_found_error_end) + allConfigDatatypes);
         }
     }
-
     return config;
 }

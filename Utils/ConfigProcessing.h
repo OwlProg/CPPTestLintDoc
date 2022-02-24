@@ -17,11 +17,12 @@
 #include "Exceptions.h"
 
 namespace Constants {
+
     constexpr size_t numberOfSpecialYamlSymbols = 8, numberOfConfigDatatypes = 7;
 
     const std::array<char, numberOfSpecialYamlSymbols> specialYamlSymbols = {',', ' ', '\n', '\t', ':', '[', '-'};
 
-    inline constexpr std::string_view config_path = "config.yml";
+    inline constexpr std::string_view config_path = "../config.yml";
 
     inline constexpr std::string_view config_arguement_not_found_error_start = "An error was detected during the processing of the config.yaml: ";
 
@@ -52,6 +53,14 @@ namespace Config {
     std::string configDataType2string(const ConfigDatatype &configDatatype);
 
     /*!
+     * @brief just reads the config.yml file
+     *
+     * @param configPath
+     * @return string of config content
+     */
+    std::string readConfig(const std::string &configPath);
+
+    /*!
      * @brief separate processing of paths
      *
      * @param str a string where to find paths
@@ -74,7 +83,7 @@ namespace Config {
      *
      * @return hashtable with pairs of config data types and their arguments
      */
-    std::unordered_map<ConfigDatatype, std::string> processConfig();
+    std::unordered_map<ConfigDatatype, std::string> processConfig(const std::string &configContent);
 }
 
 #endif //CPPTESTLINTDOC_CONFIGPROCESSING_H

@@ -19,7 +19,7 @@ namespace DocGen
 
     enum class ObjectType
     {
-        CLASS_OR_USERTYPE,
+        USERTYPE,
         GLOBAL_VARIABLE_OR_FUNCTION,
         UNKNOWN
     };
@@ -36,6 +36,8 @@ namespace DocGen
         UNKNOWN
     };
 
+    std::string objecttype2string(const ObjectType &objectType);
+
     std::string infotype2string(const InfoType &infoType);
 
     class ObjectInfo
@@ -44,7 +46,7 @@ namespace DocGen
 
         ObjectType type;
 
-        std::unordered_map<InfoType, std::string> info;
+        std::multimap<InfoType, std::string> info;
 
     public:
 
@@ -54,7 +56,7 @@ namespace DocGen
 
         void setInfo(const InfoType &_type, const std::string &_doc);
 
-        std::unordered_map<InfoType, std::string> getInfo() const;
+        std::multimap<InfoType, std::string> getInfo() const;
 
         /*!
          * @brief deleting spcial symbols, such as '@' in doxygen style or '*' or "//" in comments
@@ -77,25 +79,13 @@ namespace DocGen
     {
     private:
 
-        std::map<ObjectType, ObjectInfo> documentation;
+        std::multimap<ObjectType, ObjectInfo> documentation;
 
     public:
 
         Documentation();
 
-        /*!
-         * @brief makes a brief documentation in .md file
-         *
-         * @param objects
-         */
-        void makeMarkdown(const Documentation &objects);
-
-        /*!
-         * @brief makes an HTML page by a pattern for current objects
-         *
-         * @param objects
-         */
-        void makeHTML(const Documentation &objects);
+        std::multimap<ObjectType, ObjectInfo> getDocumentation();
 
         /*!
          * @brief the main function in document generation part
