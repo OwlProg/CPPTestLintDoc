@@ -502,12 +502,6 @@ CodeParser::Token::tokenizeText(const std::string &code, bool spaces, bool tabs,
                     addToken(tokens, temp);
                     temp.clear();
                 }
-                else
-                {
-                    temp.push_back(i);
-                    addToken(Tokens, temp);
-                    temp.clear();
-                }
             }
             else if (i == "'"[0]) {
                 if (!inQuote) {
