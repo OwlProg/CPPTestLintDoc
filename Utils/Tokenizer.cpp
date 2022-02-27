@@ -561,5 +561,7 @@ CodeParser::Token::tokenizeFile(const std::string &FilePath, bool spaces, bool t
 
     std::string code = temp.str();
 
+    file.close();
+
     return tokenizeText(code, spaces, tabs, new_lines, combine_keywords, combine_comments, combine_types, combine_operators);
 }

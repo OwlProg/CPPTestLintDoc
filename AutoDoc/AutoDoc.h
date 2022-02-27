@@ -92,8 +92,12 @@ namespace DocGen
          *
          * @param PathToFile
          */
-        void createDocumentation(const std::string &PathToFile, const std::unordered_map<Config::ConfigDatatype, std::string> &config);
+        void findDocumentationForObject(const std::string &PathToFile, const std::unordered_map<Config::ConfigDatatype, std::string> &config);
+
+        static std::string makeHtmlPath(const std::unordered_map<Config::ConfigDatatype, std::string> &config, const std::string &fileName);
     };
+
+    void generatingDocumentation(const std::string &configContent);
 }
 
 namespace Constants

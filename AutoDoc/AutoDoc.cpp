@@ -236,7 +236,7 @@ std::multimap<DocGen::ObjectType, DocGen::ObjectInfo> DocGen::Documentation::get
     return documentation;
 }
 
-void DocGen::Documentation::createDocumentation(const std::string &PathToFile, const std::unordered_map<Config::ConfigDatatype, std::string> &config) {
+void DocGen::Documentation::findDocumentationForObject(const std::string &PathToFile, const std::unordered_map<Config::ConfigDatatype, std::string> &config) {
     std::vector<CodeParser::Token> tokenizedCode = CodeParser::Token::tokenizeFile(PathToFile, false, false, true, true, true, true, true);
     size_t tokenizedCodeSize = tokenizedCode.size();
     bool usertypeDefinitionFound = false, insideUsertypeDefinition = false;
@@ -269,6 +269,74 @@ void DocGen::Documentation::createDocumentation(const std::string &PathToFile, c
             documentation.insert(std::make_pair(DocGen::ObjectType::GLOBAL_VARIABLE_OR_FUNCTION, DocGen::ObjectInfo(tokenizedCode, i - 1)));
         }
     }
+}
+
+std::string DocGen::Documentation::makeHtmlPath(const std::unordered_map<Config::ConfigDatatype, std::string> &config, const std::string &fileName) {
+    std::string path = config.find(Config::ConfigDatatype::DOCUMENTATION_PATH)->second;
+    if (path[path.size() - 1] == '/' || path[path.size() - 1] == '\\') {
+        path += fileName;
+    }
+    else {
+        if (path.find('\\') != std::string::npos) {
+            path += "\\" + fileName;
+        }
+        else if (path.find('/') != std::string::npos) {
+            path += "/" + fileName;
+        }
+        else {
+            path += "/" + fileName;
+        }
+    }
+    return path;
+}
+
+void DocGen::generatingDocumentation(const std::string &configContent) {
+    DocGen::Documentation documentation;
+    std::unordered_map<Config::ConfigDatatype, std::string> config = Config::processConfig(configContent);
+    std::vector<std::string> paths = Config::getAllEnumeratedPaths(configContent,
+                                                                   configContent.find(Config::configDataType2string(Config::ConfigDatatype::FILES_TO_PROCESS_PATHS)));
+    for (const auto &path: paths) {
+        documentation.findDocumentationForObject(path, config);
+    }
+
+    std::string docPath = config[Config::ConfigDatatype::DOCUMENTATION_PATH];
+
+    std::ofstream index(DocGen::Documentation::makeHtmlPath(config, "index.html"));
+
+    std::string page = StringTools::readFile("DocPatterns/page_pattern.html");
+
+    std::vector<std::ofstream> htmlFiles;
+
+    for (const auto &it: documentation.getDocumentation()) {
+        if (it.first == DocGen::ObjectType::USERTYPE) {
+            for (const auto &info: it.second.getInfo()) {
+                if (info.first == DocGen::InfoType::SHORT_NAME && !info.second.empty()) {
+                    page.append("<li>\n\t\t<a href=\"" + info.second + ".html" + "\">Page 1</a>\n\t\t</li>");
+                    std::ofstream newFile(DocGen::Documentation::makeHtmlPath(config, info.second + ".html"));
+                    htmlFiles.push_back(std::move(newFile));
+                }
+            }
+        }
+    }
+
+    std::string globalFuncAndVarsPattern = StringTools::readFile("DocPatterns/global_f&v.html");
+
+    std::string globalFuncAndVarsHtmlPath = DocGen::Documentation::makeHtmlPath(config, "globalFunctionsAndVariables.html");
+    std::ofstream globalFunctionsAndVariables(globalFuncAndVarsHtmlPath);
+
+    page.append(globalFuncAndVarsPattern);
+    StringTools::replaceAll(page, "#pageSubmenu", globalFuncAndVarsHtmlPath);
+
+    std::string content = StringTools::readFile("DocPatterns/content_pattern.html");
+    page.append(content);
 
 
+
+    std::string end = StringTools::readFile("DocPatterns/end_pattern.html");
+    for (auto &it: htmlFiles){
+        it << end;
+        it.close();
+    }
+    index.close();
+    globalFunctionsAndVariables.close();
 }

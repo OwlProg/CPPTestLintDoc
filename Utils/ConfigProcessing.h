@@ -38,6 +38,7 @@ namespace Config {
         PROJECT_NAME,
         ROOT_PATH,
         LOGO_PATH,
+        DOCUMENTATION_PATH,
         THEME,
         FILES_TO_PROCESS_PATHS,
         REPOSITORY_URL,

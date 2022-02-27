@@ -16,6 +16,9 @@ std::string Config::configDataType2string(const Config::ConfigDatatype &configDa
         case ConfigDatatype::LOGO_PATH:
             return "LogoPath";
 
+        case ConfigDatatype::DOCUMENTATION_PATH:
+            return "DocumentationPath";
+
         case ConfigDatatype::THEME:
             return "Theme";
 
@@ -41,6 +44,8 @@ std::string Config::readConfig(const std::string &configPath) {
 
     std::stringstream temp;
     temp << file.rdbuf();
+
+    file.close();
 
     return temp.str();
 }
