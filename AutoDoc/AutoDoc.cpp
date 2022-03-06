@@ -4,6 +4,7 @@
 
 #include "AutoDoc.h"
 
+#pragma region ObjectInfo
 DocGen::ObjectInfo::ObjectInfo() {
     type = ObjectType::UNKNOWN;
 }
@@ -77,13 +78,39 @@ DocGen::ObjectInfo::ObjectInfo(const std::vector<CodeParser::Token> &code, const
             info.insert(std::make_pair(InfoType::BRIEF, commentPreprocessing(code[object_idx - 2].getToken())));
             infoAdded = true;
         }
-        else if (object_idx < code.size() - 3 && code[object_idx + 3].getType() == CodeParser::TokenType::COMMENT) {
-            info.insert(std::make_pair(InfoType::BRIEF, commentPreprocessing(code[object_idx + 3].getToken())));
-            infoAdded = true;
+        else {
+            std::string comment;
+            for (size_t idx = object_idx; idx < code.size(); idx++) {
+                if (code[idx].getToken() == "*new_line*") {
+                    break;
+                }
+                if (code[idx].getType() == CodeParser::TokenType::COMMENT) {
+                    comment.append(code[idx].getToken());
+                }
+            }
+            if (!comment.empty()) {
+                info.insert(std::make_pair(InfoType::BRIEF, commentPreprocessing(comment)));
+                infoAdded = true;
+            }
         }
         if (infoAdded) {
             info.insert(std::make_pair(InfoType::TYPE_OF_OBJECT, code[object_idx].getToken()));
-            info.insert(std::make_pair(InfoType::FULL_NAME, code[object_idx].getToken() + " " + code[object_idx + 1].getToken()));
+            std::string init;
+            size_t idx = object_idx;
+            while (code[idx - 1].getToken() != "*new_line*") {
+                idx--;
+            }
+            while (code[idx].getToken() != "*new_line*") {
+                if (code[idx].getType() != CodeParser::TokenType::COMMENT) {
+                    if (code[idx].getToken() != "{" && code[idx].getToken() != "}" && code[idx].getToken() != "." && code[idx - 1].getToken() != "." &&
+                        code[idx - 1].getToken() != "{" && code[idx].getToken() != ";") {
+                        init.append(" ");
+                    }
+                    init.append(code[idx].getToken());
+                }
+                idx++;
+            }
+            info.insert(std::make_pair(InfoType::FULL_NAME, init));
             info.insert(std::make_pair(InfoType::SHORT_NAME, code[object_idx + 1].getToken()));
         }
     }
@@ -106,7 +133,22 @@ DocGen::ObjectInfo::ObjectInfo(const std::vector<CodeParser::Token> &code, const
         }
         if (infoAdded) {
             info.insert(std::make_pair(InfoType::TYPE_OF_OBJECT, code[object_idx].getToken()));
-            info.insert(std::make_pair(InfoType::FULL_NAME, code[object_idx].getToken() + code[object_idx + 1].getToken()));
+            std::string init;
+            size_t idx = object_idx;
+            while (code[idx - 1].getToken() != "*new_line*") {
+                idx--;
+            }
+            while (code[idx].getToken() != "*new_line*") {
+                if (code[idx].getType() != CodeParser::TokenType::COMMENT) {
+                    if (code[idx].getToken() != "(" && code[idx].getToken() != ")" && code[idx].getToken() != "," && code[idx - 1].getToken() != "(" &&
+                        code[idx].getToken() != ";") {
+                        init.append(" ");
+                    }
+                    init.append(code[idx].getToken());
+                }
+                idx++;
+            }
+            info.insert(std::make_pair(InfoType::FULL_NAME, init));
             info.insert(std::make_pair(InfoType::SHORT_NAME, code[object_idx + 1].getToken()));
         }
     }
@@ -227,7 +269,9 @@ DocGen::ObjectInfo::ObjectInfo(const std::vector<CodeParser::Token> &code, const
         }
     }
 }
+#pragma endregion ObjectInfo
 
+#pragma region Documentation
 DocGen::Documentation::Documentation() {
     documentation = std::multimap<ObjectType, ObjectInfo>();
 }
@@ -236,7 +280,7 @@ std::multimap<DocGen::ObjectType, DocGen::ObjectInfo> DocGen::Documentation::get
     return documentation;
 }
 
-void DocGen::Documentation::findDocumentationForObject(const std::string &PathToFile, const std::unordered_map<Config::ConfigDatatype, std::string> &config) {
+void DocGen::Documentation::findDocumentationForFile(const std::string &PathToFile, const std::unordered_map<Config::ConfigDatatype, std::string> &config) {
     std::vector<CodeParser::Token> tokenizedCode = CodeParser::Token::tokenizeFile(PathToFile, false, false, true, true, true, true, true);
     size_t tokenizedCodeSize = tokenizedCode.size();
     bool usertypeDefinitionFound = false, insideUsertypeDefinition = false;
@@ -264,8 +308,10 @@ void DocGen::Documentation::findDocumentationForObject(const std::string &PathTo
                 usertypeDefinitionFound = false;
             }
         }
-        else if ((tokenizedCode[i].getType() == CodeParser::TokenType::VARIABLE_NAME || tokenizedCode[i].getType() == CodeParser::TokenType::FUNCTION_NAME) &&
-                 !insideUsertypeDefinition) {
+        else if (((tokenizedCode[i].getType() == CodeParser::TokenType::VARIABLE_NAME && tokenizedCode[i - 1].getType() == CodeParser::TokenType::TYPENAME &&
+                   (tokenizedCode[i + 1].getToken() == "=" || tokenizedCode[i + 1].getToken() == ";" || tokenizedCode[i + 1].getToken() == "{")) ||
+                  (tokenizedCode[i].getType() == CodeParser::TokenType::FUNCTION_NAME && tokenizedCode[i - 1].getType() == CodeParser::TokenType::TYPENAME &&
+                   tokenizedCode[i + 1].getToken() == "(")) && !insideUsertypeDefinition) {
             documentation.insert(std::make_pair(DocGen::ObjectType::GLOBAL_VARIABLE_OR_FUNCTION, DocGen::ObjectInfo(tokenizedCode, i - 1)));
         }
     }
@@ -290,13 +336,13 @@ std::string DocGen::Documentation::makeHtmlPath(const std::unordered_map<Config:
     return path;
 }
 
-void DocGen::generatingDocumentation(const std::string &configContent) {
+void DocGen::generateDocumentation(const std::string &configContent) {
     DocGen::Documentation documentation;
     std::unordered_map<Config::ConfigDatatype, std::string> config = Config::processConfig(configContent);
     std::vector<std::string> paths = Config::getAllEnumeratedPaths(configContent,
                                                                    configContent.find(Config::configDataType2string(Config::ConfigDatatype::FILES_TO_PROCESS_PATHS)));
     for (const auto &path: paths) {
-        documentation.findDocumentationForObject(path, config);
+        documentation.findDocumentationForFile(path, config);
     }
 
     std::string docPath = config[Config::ConfigDatatype::DOCUMENTATION_PATH];
@@ -305,15 +351,27 @@ void DocGen::generatingDocumentation(const std::string &configContent) {
 
     std::string page = StringTools::readFile("DocPatterns/page_pattern.html");
 
-    std::vector<std::ofstream> htmlFiles;
+    std::vector<std::pair<std::ofstream, std::string>> htmlFiles;
 
     for (const auto &it: documentation.getDocumentation()) {
         if (it.first == DocGen::ObjectType::USERTYPE) {
             for (const auto &info: it.second.getInfo()) {
                 if (info.first == DocGen::InfoType::SHORT_NAME && !info.second.empty()) {
-                    page.append("<li>\n\t\t<a href=\"" + info.second + ".html" + "\">Page 1</a>\n\t\t</li>");
+                    page.append("<li>\n\t\t<a href=\"" + info.second + ".html" + "\">");
+                    std::string heading;
+                    for (const auto &another_info: it.second.getInfo()) {
+                        if (another_info.first == DocGen::InfoType::FULL_NAME) {
+                            if (another_info.second.empty()) {
+                                heading = info.second + "</a>\n\t\t</li>";
+                            }
+                            else {
+                                heading = another_info.second + "</a>\n\t\t</li>\"";
+                            }
+                        }
+                    }
+                    page.append(heading + "</a>\n\t\t</li>");
                     std::ofstream newFile(DocGen::Documentation::makeHtmlPath(config, info.second + ".html"));
-                    htmlFiles.push_back(std::move(newFile));
+                    htmlFiles.push_back(std::make_pair(std::move(newFile), heading));
                 }
             }
         }
@@ -326,17 +384,33 @@ void DocGen::generatingDocumentation(const std::string &configContent) {
 
     page.append(globalFuncAndVarsPattern);
     StringTools::replaceAll(page, "#pageSubmenu", globalFuncAndVarsHtmlPath);
-
     std::string content = StringTools::readFile("DocPatterns/content_pattern.html");
     page.append(content);
-
-
-
     std::string end = StringTools::readFile("DocPatterns/end_pattern.html");
-    for (auto &it: htmlFiles){
-        it << end;
-        it.close();
+    for (auto &it: htmlFiles) {
+        it.first << page << "\t\t\t<br><br>\n\t\t\t<h3>" + it.second + "</h3>\n\t\t\t<pre><code class=\"language-cpp\">";
+        for (const auto &info: documentation.getDocumentation()) {
+            if (info.first == DocGen::ObjectType::USERTYPE) {
+                for (const auto &info_element: info.second.getInfo()) {
+                    if (info_element.first == DocGen::InfoType::FULL_NAME && !info_element.second.empty()) {
+                        std::string temp_str = info_element.second;
+                        StringTools::replaceAll(temp_str, "<", "&lt;");
+                        StringTools::replaceAll(temp_str, ">", "&gt;");
+                        it.first << temp_str << "</code></pre><br><br><h3>Description</h3>";
+                        break;
+                    }
+                }
+                for (const auto &info_element: info.second.getInfo()) {
+                    if (info_element.first == DocGen::InfoType::BRIEF && !info_element.second.empty()) {
+                        it.first << "<p>" << info_element.second << "</p>";
+                    }
+                }
+            }
+        }
+        it.first << end;
+        it.first.close();
     }
     index.close();
     globalFunctionsAndVariables.close();
 }
+#pragma endregion Documentation
