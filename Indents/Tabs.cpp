@@ -69,8 +69,6 @@ std::string TabsFormatter (std::string FNAME){
         }
 
     }
-
-    std::cout << full << std::endl;
     f.close();
     return full;
 }
