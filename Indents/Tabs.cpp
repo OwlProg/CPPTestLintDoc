@@ -11,6 +11,9 @@ std::string TabsFormatter (std::string FNAME){
     int count = 0;
     std::string T = "\n    ";
     std::string D = "}";
+    std::string P1 = "private:";
+    std::string P2 = "public:";
+    std::string P3 = "protected:";
     std::ifstream f(FNAME);
     while (f.get(ch)) {
 
@@ -63,12 +66,23 @@ std::string TabsFormatter (std::string FNAME){
 
     for (int i = 0; i < full.size(); i++)
     {
-        if (full[i] == '}')
+        if (full[i] == '}' && full[i-1] == ' ')
         {
             full.replace(i-4, 5, D);
         }
 
     }
+    int ipri = full.find("private:");
+    if (ipri != -1)
+        full.replace(ipri - 4, 12, P1);
+
+    int ipub = full.find("public:");
+    if (ipub != -1)
+        full.replace(ipub - 4, 11, P2);
+
+    int ipro = full.find("protected:");
+    if (ipro != -1)
+        full.replace(ipro - 4, 14, P3);
     f.close();
     return full;
 }
