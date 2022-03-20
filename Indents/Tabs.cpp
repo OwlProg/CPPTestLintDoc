@@ -72,7 +72,6 @@ std::string TabsFormatter (std::string FNAME){
         }
 
     }
-
     int ipri = full.find("private:");
     if (ipri != -1)
         full.replace(ipri - 4, 12, P1);
@@ -84,8 +83,6 @@ std::string TabsFormatter (std::string FNAME){
     int ipro = full.find("protected:");
     if (ipro != -1)
         full.replace(ipro - 4, 14, P3);
-
-
     f.close();
     return full;
 }
