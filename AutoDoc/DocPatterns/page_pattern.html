@@ -24,7 +24,7 @@
             margin: 0;
             padding: 0;
             height: 100vh;
-            overflow: hidden;
+            /*overflow: hidden;*/
         }
 
         #textBlock
@@ -85,6 +85,14 @@
             font-weight: 300;
             line-height: 1.7em;
             color: #999;
+            margin-left: 400px;
+            margin-top: 50px;
+        }
+
+        span
+        {
+            margin-left: 400px;
+            margin-top: 50px;
         }
 
         a, a:hover, a:focus
@@ -140,30 +148,26 @@
             background: #303335;
         }
 
-        a[data-toggle="collapse"]
+        pre
         {
-            position: relative;
+            padding-top: 20px;
+            padding-right: 250px;
+            padding-left: 25px;
+            margin-left: 500px;
+            margin-top: 50px;
+            background-color: whitesmoke;
         }
 
-        .dropdown-toggle::after
+        h3
         {
-            display: block;
-            position: absolute;
-            top: 50%;
-            right: 20px;
-            transform: translateY(-50%);
+            color: black;
+            margin-left: 500px;
         }
 
-        @media (max-width: 768px)
+        #content p
         {
-            #sidebar
-            {
-                margin-left: -250px;
-            }
-            #sidebar.active
-            {
-                margin-left: 0;
-            }
+            margin-left: 525px;
+            color: dimgrey;
         }
 
     </style>
@@ -173,7 +177,7 @@
     <!-- Sidebar -->
     <nav id="sidebar">
         <div class="sidebar-header">
-            <h3>CPPTestLinkDoc</h3>
+            <h3>%PROJECT_NAME%</h3>
             <img src="%LOGO_PATH%" alt="Italian Trulli">
         </div>
 

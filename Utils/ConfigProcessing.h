@@ -22,7 +22,7 @@ namespace Constants {
 
     const std::array<char, numberOfSpecialYamlSymbols> specialYamlSymbols = {',', ' ', '\n', '\t', ':', '[', '-'};
 
-    inline constexpr std::string_view config_path = "../config.yml";
+    inline constexpr std::string_view config_path = "../src/config.yml";
 
     inline constexpr std::string_view config_arguement_not_found_error_start = "An error was detected during the processing of the config.yaml: ";
 
@@ -42,14 +42,12 @@ namespace Config {
         THEME,
         FILES_TO_PROCESS_PATHS,
         REPOSITORY_URL,
-        MD_FLAG,
         UNKNOWN_DATA
     };
 
-    constexpr std::array<ConfigDatatype, Constants::numberOfConfigDatatypes> configDatatypes = {ConfigDatatype::PROJECT_NAME, ConfigDatatype::ROOT_PATH,
-                                                                                                ConfigDatatype::LOGO_PATH, ConfigDatatype::FILES_TO_PROCESS_PATHS,
-                                                                                                ConfigDatatype::THEME, ConfigDatatype::REPOSITORY_URL,
-                                                                                                ConfigDatatype::MD_FLAG};
+    constexpr std::array<ConfigDatatype, Constants::numberOfConfigDatatypes> configDatatypes = {ConfigDatatype::PROJECT_NAME, ConfigDatatype::ROOT_PATH, ConfigDatatype::LOGO_PATH,
+                                                                                                ConfigDatatype::FILES_TO_PROCESS_PATHS, ConfigDatatype::THEME,
+                                                                                                ConfigDatatype::DOCUMENTATION_PATH, ConfigDatatype::REPOSITORY_URL};
 
     std::string configDataType2string(const ConfigDatatype &configDatatype);
 

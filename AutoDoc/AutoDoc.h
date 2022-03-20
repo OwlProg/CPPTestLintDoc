@@ -56,7 +56,7 @@ namespace DocGen
 
         void setInfo(const InfoType &_type, const std::string &_doc);
 
-        std::multimap<InfoType, std::string> getInfo() const;
+        [[nodiscard]] std::multimap<InfoType, std::string> getInfo() const;
 
         /*!
          * @brief deleting spcial symbols, such as '@' in doxygen style or '*' or "//" in comments
@@ -72,7 +72,7 @@ namespace DocGen
          * @param code std::vector of tokens, created from text of code
          * @param object_name name of object, information about function is about to find
          */
-         ObjectInfo(const std::vector<CodeParser::Token> &code, const size_t &object_idx);
+        ObjectInfo(const std::vector<CodeParser::Token> &code, const size_t &object_idx);
     };
 
     class Documentation
@@ -102,19 +102,13 @@ namespace DocGen
 
 namespace Constants
 {
-    inline constexpr std::string_view objects_path = "docs/objects";
+    inline constexpr std::string_view index_start_pattern_path = "../src/AutoDoc/DocPatterns/index_start_pattern.html";
 
-    inline constexpr std::string_view index_path = "docs/index.html";
+    inline constexpr std::string_view index_end_pattern_path = "../src/AutoDoc/DocPatterns/index_end_pattern.html";
 
-    inline constexpr std::string_view sidebar_path = "docs/objects/menu.html";
+    inline constexpr std::string_view sidebar_start_pattern_path = "../src/AutoDoc/DocPatterns/menu_start_pattern.html";
 
-    inline constexpr std::string_view index_start_pattern_path = "AutoDoc/DocPatterns/index_start_pattern.html";
-
-    inline constexpr std::string_view index_end_pattern_path = "AutoDoc/DocPatterns/index_end_pattern.html";
-
-    inline constexpr std::string_view sidebar_start_pattern_path = "AutoDoc/DocPatterns/menu_start_pattern.html";
-
-    inline constexpr std::string_view sidebar_end_pattern_path = "AutoDoc/DocPatterns/menu_end_pattern.html";
+    inline constexpr std::string_view sidebar_end_pattern_path = "../src/AutoDoc/DocPatterns/menu_end_pattern.html";
 }
 
 
