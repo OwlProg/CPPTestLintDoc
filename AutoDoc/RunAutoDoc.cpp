@@ -4,9 +4,8 @@
 
 #include "AutoDoc.h"
 
-//int main()
-//{
-//    std::unordered_map<Config::ConfigDatatype, std::string> config = Config::processConfig();
-//
-//    return 0;
-//}
+int main() {
+    std::string configContent = Config::readConfig(std::string(Constants::config_path));
+    DocGen::generateDocumentation(configContent);
+    return 0;
+}

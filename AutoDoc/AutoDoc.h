@@ -1,6 +1,6 @@
 /*!
-    @author Kozulin Ilya
-*/
+ *  @author Ailurus
+ */
 
 #ifndef CPPTESTLINTDOC_AUTODOC_H
 #define CPPTESTLINTDOC_AUTODOC_H
@@ -19,7 +19,7 @@ namespace DocGen
 
     enum class ObjectType
     {
-        CLASS_OR_USERTYPE,
+        USERTYPE,
         GLOBAL_VARIABLE_OR_FUNCTION,
         UNKNOWN
     };
@@ -36,6 +36,8 @@ namespace DocGen
         UNKNOWN
     };
 
+    std::string objecttype2string(const ObjectType &objectType);
+
     std::string infotype2string(const InfoType &infoType);
 
     class ObjectInfo
@@ -44,7 +46,7 @@ namespace DocGen
 
         ObjectType type;
 
-        std::unordered_map<InfoType, std::string> info;
+        std::multimap<InfoType, std::string> info;
 
     public:
 
@@ -54,7 +56,7 @@ namespace DocGen
 
         void setInfo(const InfoType &_type, const std::string &_doc);
 
-        std::unordered_map<InfoType, std::string> getInfo() const;
+        [[nodiscard]] std::multimap<InfoType, std::string> getInfo() const;
 
         /*!
          * @brief deleting spcial symbols, such as '@' in doxygen style or '*' or "//" in comments
@@ -70,57 +72,43 @@ namespace DocGen
          * @param code std::vector of tokens, created from text of code
          * @param object_name name of object, information about function is about to find
          */
-         ObjectInfo(const std::vector<CodeParser::Token> &code, const size_t &object_idx);
+        ObjectInfo(const std::vector<CodeParser::Token> &code, const size_t &object_idx);
     };
 
     class Documentation
     {
     private:
 
-        std::map<ObjectType, ObjectInfo> documentation;
+        std::multimap<ObjectType, ObjectInfo> documentation;
 
     public:
 
         Documentation();
 
-        /*!
-         * @brief makes a brief documentation in .md file
-         *
-         * @param objects
-         */
-        void makeMarkdown(const Documentation &objects);
-
-        /*!
-         * @brief makes an HTML page by a pattern for current objects
-         *
-         * @param objects
-         */
-        void makeHTML(const Documentation &objects);
+        std::multimap<ObjectType, ObjectInfo> getDocumentation();
 
         /*!
          * @brief the main function in document generation part
          *
          * @param PathToFile
          */
-        void createDocumentation(const std::string &PathToFile, const std::unordered_map<Config::ConfigDatatype, std::string> &config);
+        void findDocumentationForFile(const std::string &PathToFile, const std::unordered_map<Config::ConfigDatatype, std::string> &config);
+
+        static std::string makeHtmlPath(const std::unordered_map<Config::ConfigDatatype, std::string> &config, const std::string &fileName);
     };
+
+    void generateDocumentation(const std::string &configContent);
 }
 
 namespace Constants
 {
-    inline constexpr std::string_view objects_path = "docs/objects";
+    inline constexpr std::string_view page_pattern_path = "../src/AutoDoc/DocPatterns/page_pattern.html";
 
-    inline constexpr std::string_view index_path = "docs/index.html";
+    inline constexpr std::string_view end_pattern_path = "../src/AutoDoc/DocPatterns/end_pattern.html";
 
-    inline constexpr std::string_view sidebar_path = "docs/objects/menu.html";
+    inline constexpr std::string_view globals_path = "../src/AutoDoc/DocPatterns/golbal_f&v.html";
 
-    inline constexpr std::string_view index_start_pattern_path = "AutoDoc/DocPatterns/index_start_pattern.html";
-
-    inline constexpr std::string_view index_end_pattern_path = "AutoDoc/DocPatterns/index_end_pattern.html";
-
-    inline constexpr std::string_view sidebar_start_pattern_path = "AutoDoc/DocPatterns/menu_start_pattern.html";
-
-    inline constexpr std::string_view sidebar_end_pattern_path = "AutoDoc/DocPatterns/menu_end_pattern.html";
+    inline constexpr std::string_view content_pattern_path = "../src/AutoDoc/DocPatterns/content_pattern.html";
 }
 
 

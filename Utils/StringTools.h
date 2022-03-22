@@ -11,6 +11,9 @@
 #include <vector>
 #include <string>
 #include <string_view>
+#include <fstream>
+#include <sstream>
+#include <ostream>
 
 namespace StringTools {
     /*!
@@ -21,6 +24,14 @@ namespace StringTools {
      * @param replaceStr a string you want to have in the place of toSearch
      */
     void replaceAll(std::string &data, const std::string &toSearch, const std::string &replaceStr);
+
+    /*!
+     * @brief converts text in file into std::string
+     *
+     * @param path
+     * @return string with text from the file
+     */
+    std::string readFile(const std::string &path);
 }
 
 

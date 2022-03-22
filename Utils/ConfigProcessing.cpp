@@ -16,6 +16,9 @@ std::string Config::configDataType2string(const Config::ConfigDatatype &configDa
         case ConfigDatatype::LOGO_PATH:
             return "LogoPath";
 
+        case ConfigDatatype::DOCUMENTATION_PATH:
+            return "DocumentationPath";
+
         case ConfigDatatype::THEME:
             return "Theme";
 
@@ -25,12 +28,23 @@ std::string Config::configDataType2string(const Config::ConfigDatatype &configDa
         case ConfigDatatype::REPOSITORY_URL:
             return "RepositoryURL";
 
-        case ConfigDatatype::MD_FLAG:
-            return "Markdown";
-
         default:
             return "Unknown";
     }
+}
+
+std::string Config::readConfig(const std::string &configPath) {
+    std::unordered_map<Config::ConfigDatatype, std::string> config;
+    std::ifstream file;
+    std::string path = std::string(Constants::config_path);
+    file.open(std::string(Constants::config_path), std::ifstream::in);
+
+    std::stringstream temp;
+    temp << file.rdbuf();
+
+    file.close();
+
+    return temp.str();
 }
 
 std::vector<std::string> Config::getAllEnumeratedPaths(const std::string &str, const size_t &idx) {
@@ -56,28 +70,40 @@ std::vector<std::string> Config::getAllEnumeratedPaths(const std::string &str, c
         }
     }
     else {
-        int lastNewLineIndex = -1, firstLineOfEnumeration = -1;
-        bool dashFound = false;
+        int firstLineOfEnumeration = -1;
         for (int i = idx; i < stringSize; i++) {
             if (str[i] == '\n') {
-                firstLineOfEnumeration = i + 1;
+                firstLineOfEnumeration = i;
                 break;
             }
         }
+        bool endFound = false, atLeastOneDashFound = false;
         for (int i = firstLineOfEnumeration; i < stringSize; i++) {
-            if (str[i] == '-' && !dashFound) {
-                dashFound = true;
-                continue;
+            if (str[i] == '\n') {
+                bool dashFound = false;
+                for (int j = i + 1; j < stringSize; j++) {
+                    if (str[j] == '-') {
+                        atLeastOneDashFound = true;
+                        dashFound = true;
+                    }
+                    if (str[j] == '\n') {
+                        if (!dashFound) {
+                            endOfPathEnumeration = i;
+                            endFound = true;
+                            break;
+                        }
+                        else {
+                            i = j - 1;
+                            break;
+                        }
+                    }
+                }
             }
-            if (str[i] == '\n' && dashFound) {
-                dashFound = false;
-                continue;
-            }
-            if (str[i] == '\n' && !dashFound) {
-                endOfPathEnumeration = i;
+            if (endFound) {
+                break;
             }
         }
-        if (dashFound && endOfPathEnumeration == -1) {
+        if (atLeastOneDashFound && endOfPathEnumeration == -1) {
             endOfPathEnumeration = stringSize;
         }
     }
@@ -116,48 +142,45 @@ std::vector<std::string> Config::getAllEnumeratedPaths(const std::string &str, c
 }
 
 std::pair<std::string, size_t> Config::findNextWord(const std::string &str, const size_t &idx) {
-    size_t stringSize = str.size(), firstWordEnd = idx, newWordStart = idx;
+    size_t stringSize = str.size();
     std::pair<std::string, size_t> nextWord;
     bool firstWordEnded = false, secondWordStarted = false;
     for (size_t i = idx; i < stringSize; i++) {
-        bool flag = false;
-        for (size_t j = 0; j < Constants::numberOfSpecialYamlSymbols; j++) {
-            if (str[i] == Constants::specialYamlSymbols[j]) {
-                flag = true;
-                if (!firstWordEnded) {
-                    firstWordEnded = true;
-                    break;
+        if (str[i] == ':' && !firstWordEnded) {
+            firstWordEnded = true;
+        }
+        else if (str[i] == '"' && firstWordEnded) {
+            for (size_t j = i + 1; j < stringSize; j++) {
+                if (str[j] != '"') {
+                    nextWord.first.push_back(str[j]);
                 }
-                if (secondWordStarted) {
+                else {
+                    nextWord.second = i - 1;
                     return nextWord;
                 }
             }
         }
-        if (!flag) {
-            if (firstWordEnded && !secondWordStarted) {
+        else if ((str[i] >= 'a' && str[i] <= 'z' || str[i] >= 'A' && str[i] <= 'Z') && firstWordEnded) {
+            if (!secondWordStarted) {
                 nextWord.second = i;
                 secondWordStarted = true;
             }
+            nextWord.first.push_back(str[i]);
+        }
+        else {
             if (secondWordStarted) {
-                nextWord.first.push_back(str[i]);
+                return nextWord;
+            }
+            else {
+                continue;
             }
         }
     }
     return nextWord;
 }
 
-std::unordered_map<Config::ConfigDatatype, std::string> Config::processConfig() {
-
+std::unordered_map<Config::ConfigDatatype, std::string> Config::processConfig(const std::string &configContent) {
     std::unordered_map<Config::ConfigDatatype, std::string> config;
-    std::ifstream file;
-    std::string path = std::string(Constants::config_path);
-    file.open(std::string(Constants::config_path), std::ifstream::in);
-
-    std::stringstream temp;
-    temp << file.rdbuf();
-
-    std::string configContent = temp.str();
-    size_t configSize = configContent.size();
     std::string allConfigDatatypes;
     for (const Config::ConfigDatatype &datatype: Config::configDatatypes) {
         allConfigDatatypes.append(configDataType2string(datatype) + ", ");
@@ -168,7 +191,8 @@ std::unordered_map<Config::ConfigDatatype, std::string> Config::processConfig() 
 
         if (idx != std::string::npos) {
             if (datatype != Config::ConfigDatatype::FILES_TO_PROCESS_PATHS) {
-                config[datatype] = (Config::findNextWord(configContent, idx)).first;
+                std::string str = (Config::findNextWord(configContent, idx)).first;
+                config[datatype] = str;
                 if (config[datatype][0] == '"' && config[datatype][config[datatype].size() - 1] == '"') {
                     config[datatype].pop_back(), config[datatype].erase(0, 1);
                 }
@@ -185,6 +209,5 @@ std::unordered_map<Config::ConfigDatatype, std::string> Config::processConfig() 
                                                        std::string(Constants::config_arguement_not_found_error_end) + allConfigDatatypes);
         }
     }
-
     return config;
 }

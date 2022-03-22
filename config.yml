@@ -1,5 +1,3 @@
-# Please, specify paths in quotation marks
-
 ProjectName:
   %PROJECT_NAME%
 
@@ -9,26 +7,14 @@ RootPath:
 LogoPath:
   "%LOGO_PATH%"
 
-# Enter a path to the directory where you want to save generated documentation
 DocumentaionPath:
   "%DOCUMENTATION_PATH%"
 
-# Choose Dark or Light
 Theme:
   %THEME%
 
-# You can enumerate files via [*FileName1*, *FileName2*, ...] or using
-# - *FileName1*
-# - *FileName2*
-# - ...
 FilesToProcessPaths:
-  - "%FILE_NAME1%"
-  - "%FILE_NAME2%"
+  - "%FILE_NAME%"
 
 RepositoryURL:
   %REPOSITORY_URL%
-
-# If you need brief markdown description for each
-# of listed files enter 1, otherwise leave zero
-Markdown:
-  0
