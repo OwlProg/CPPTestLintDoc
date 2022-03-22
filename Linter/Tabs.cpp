@@ -61,15 +61,15 @@ std::string TabsFormatter (const std::string &FNAME){
 
     }
     int ipri = full.find(P1);
-    if (ipri != -1)
+    if (ipri != std::string::npos)
         full.replace(ipri - 4, P1.length()+4, P1);
 
     int ipub = full.find(P2);
-    if (ipub != -1)
+    if (ipub != std::string::npos)
         full.replace(ipub - 4, P2.length()+4, P2);
 
     int ipro = full.find(P3);
-    if (ipro != -1)
+    if (ipro != std::string::npos)
         full.replace(ipro - 4, P3.length()+4, P3);
     file.close();
     return full;
