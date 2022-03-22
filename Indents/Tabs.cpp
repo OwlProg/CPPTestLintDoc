@@ -1,63 +1,51 @@
 
 #include "Tabs.h"
 
-std::string TabsFormatter (std::string FNAME){
+std::string TabsFormatter (const std::string &FNAME){
     std::vector<std::string> v;
     char ch;
     int pos = 0;
     int number = 0;
     std::string full;
-    int flag = 0;
+    int key = 0;
     int count = 0;
-    std::string T = "\n    ";
-    std::string D = "}";
-    std::string P1 = "private:";
-    std::string P2 = "public:";
-    std::string P3 = "protected:";
-    std::ifstream f(FNAME);
-    while (f.get(ch)) {
+    const std::string T = "\n    ";
+    const std::string D = "}";
+    const std::string P1 = "private:";
+    const std::string P2 = "public:";
+    const std::string P3 = "protected:";
 
-        if (!pos) {
-            v.emplace_back(std::string());
-        }
+        std::ifstream file;
+        file.open(FNAME);
 
-        if (ch == '\n') {
-            number++;
-            pos = 0;
-        }
+        std::stringstream temp;
+        temp << file.rdbuf();
 
-        v[number].append(pos + 1, ch);
-        count++;
-    }
+        full = temp.str();
 
+        temp.clear();
 
-    for (int i = 0; i < count; i++) {
-        full += v[i];
-    }
-
-
-    for (int i = 0; i < full.size(); i++)
-    {
-        if (full[i] == '\n')
+        for (int i = 0; i < full.size(); i++)
         {
-            int k = 1;
-            while (full[i + k] == ' ')
+            if (full[i] == '\n')
             {
+                int k = 1;
+                while (full[i + k] == ' ')
+                {
                 full.erase(i+k,1);
-
+                }
             }
         }
-    }
 
     for (int i = 0; i < full.size(); i++)
     {
         if (full[i] == '{')
-            flag++;
+            key++;
         if (full[i] == '}')
-            flag--;
+            key--;
         if (full[i] == '\n')
         {
-            for (int j = 0; j < flag; j++)
+            for (int j = 0; j < key; j++)
             {
                 full.replace(i, 1, T);
             }
@@ -72,17 +60,17 @@ std::string TabsFormatter (std::string FNAME){
         }
 
     }
-    int ipri = full.find("private:");
+    int ipri = full.find(P1);
     if (ipri != -1)
-        full.replace(ipri - 4, 12, P1);
+        full.replace(ipri - 4, P1.length()+4, P1);
 
-    int ipub = full.find("public:");
+    int ipub = full.find(P2);
     if (ipub != -1)
-        full.replace(ipub - 4, 11, P2);
+        full.replace(ipub - 4, P2.length()+4, P2);
 
-    int ipro = full.find("protected:");
+    int ipro = full.find(P3);
     if (ipro != -1)
-        full.replace(ipro - 4, 14, P3);
-    f.close();
+        full.replace(ipro - 4, P3.length()+4, P3);
+    file.close();
     return full;
 }
