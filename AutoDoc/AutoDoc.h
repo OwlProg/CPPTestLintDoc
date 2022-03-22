@@ -1,6 +1,6 @@
 /*!
-    @author Kozulin Ilya
-*/
+ *  @author Ailurus
+ */
 
 #ifndef CPPTESTLINTDOC_AUTODOC_H
 #define CPPTESTLINTDOC_AUTODOC_H
@@ -102,13 +102,13 @@ namespace DocGen
 
 namespace Constants
 {
-    inline constexpr std::string_view index_start_pattern_path = "../src/AutoDoc/DocPatterns/index_start_pattern.html";
+    inline constexpr std::string_view page_pattern_path = "../src/AutoDoc/DocPatterns/page_pattern.html";
 
-    inline constexpr std::string_view index_end_pattern_path = "../src/AutoDoc/DocPatterns/index_end_pattern.html";
+    inline constexpr std::string_view end_pattern_path = "../src/AutoDoc/DocPatterns/end_pattern.html";
 
-    inline constexpr std::string_view sidebar_start_pattern_path = "../src/AutoDoc/DocPatterns/menu_start_pattern.html";
+    inline constexpr std::string_view globals_path = "../src/AutoDoc/DocPatterns/golbal_f&v.html";
 
-    inline constexpr std::string_view sidebar_end_pattern_path = "../src/AutoDoc/DocPatterns/menu_end_pattern.html";
+    inline constexpr std::string_view content_pattern_path = "../src/AutoDoc/DocPatterns/content_pattern.html";
 }
 
 

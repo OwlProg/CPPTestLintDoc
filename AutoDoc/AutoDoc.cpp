@@ -349,13 +349,11 @@ void DocGen::generateDocumentation(const std::string &configContent) {
     }
 
     std::string docPath = config[Config::ConfigDatatype::DOCUMENTATION_PATH];
-
     std::string path = DocGen::Documentation::makeHtmlPath(config, "index.html");
 
     std::ofstream index(path);
 
     std::string page = StringTools::readFile("../src/AutoDoc/DocPatterns/page_pattern.html");
-
     std::vector<std::pair<std::ofstream, std::string>> htmlFiles;
 
     for (const auto &it: documentation.getDocumentation()) {
@@ -382,18 +380,20 @@ void DocGen::generateDocumentation(const std::string &configContent) {
         }
     }
 
-    std::string globalFuncAndVarsPattern = StringTools::readFile("../src/AutoDoc/DocPatterns/global_f&v.html");
-
+    std::string globalFuncAndVarsPattern = StringTools::readFile(std::string(Constants::globals_path));
     std::string globalFuncAndVarsHtmlPath = DocGen::Documentation::makeHtmlPath(config, "globalFunctionsAndVariables.html");
+
     std::ofstream globalFunctionsAndVariables(globalFuncAndVarsHtmlPath);
 
     page.append(globalFuncAndVarsPattern);
     StringTools::replaceAll(page, "#pageSubmenu", globalFuncAndVarsHtmlPath);
     StringTools::replaceAll(page, "%PROJECT_NAME%", config[Config::ConfigDatatype::PROJECT_NAME]);
-    std::string content = StringTools::readFile("../src/AutoDoc/DocPatterns/content_pattern.html");
+    std::string content = StringTools::readFile(std::string(Constants::content_pattern_path));
     page.append(content);
-    std::string end = StringTools::readFile("../src/AutoDoc/DocPatterns/end_pattern.html");
+    std::string end = StringTools::readFile(std::string(Constants::end_pattern_path));
+
     index << page << content << end;
+
     for (auto &it: htmlFiles) {
         it.first << page << "\t\t\t<br><br>\n\t\t\t<h3>" + it.second + "</h3>\n\t\t\t<pre><code class=\"language-cpp\">";
         for (const auto &info: documentation.getDocumentation()) {
