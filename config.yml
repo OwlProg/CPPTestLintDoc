@@ -7,7 +7,7 @@ RootPath:
 LogoPath:
   "%LOGO_PATH%"
 
-DocumentaionPath:
+DocumentationPath:
   "%DOCUMENTATION_PATH%"
 
 Theme:
@@ -18,3 +18,7 @@ FilesToProcessPaths:
 
 RepositoryURL:
   %REPOSITORY_URL%
+
+FilesToLinterCheck:
+  - "test.cpp"
+  - "test.h"

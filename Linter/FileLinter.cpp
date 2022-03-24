@@ -1,6 +1,6 @@
-#include "Linter.h"
+#include "FileLinter.h"
 
-Linter::Linter::Linter(const std::string& filename) {
+Linter::FileLinter::FileLinter(const std::string& filename) {
     tokens = CodeParser::Token::tokenizeFile(filename, false,
                                              false, true,
                                              true, true,
@@ -8,7 +8,7 @@ Linter::Linter::Linter(const std::string& filename) {
     analyseTokens();
 }
 
-bool Linter::Linter::areVariablesDefined() const {
+bool Linter::FileLinter::areVariablesDefined() const {
     bool result = true;
     for (auto& p : variables) {
         result &= p.second;
@@ -16,7 +16,7 @@ bool Linter::Linter::areVariablesDefined() const {
     return result;
 }
 
-void Linter::Linter::analyseTokens() {
+void Linter::FileLinter::analyseTokens() {
     bool FuncOpen = false;
     std::string currFuncName;
     bool InsideBrackets = false;
@@ -49,20 +49,22 @@ void Linter::Linter::analyseTokens() {
     }
 }
 
-void Linter::Linter::detailedReport(std::ostream &out) {
+void Linter::FileLinter::detailedReport(std::ostream &out) {
     int c = 1;
     out << "--- Variables ---" << std::endl;
     for(auto& p : variables) {
         out << c++ << ") " << p.first << " is " << (p.second ? "defined" : "undefined") << std::endl;
     }
+    if(c == 1) std::cout << "No variables found" << std::endl;
     c = 1;
     out << "--- Functions ---" << std::endl;
     for(auto& p : functions) {
         out << c++ << ") " << p.first << " is " << (p.second ? "defined" : "undefined") << std::endl;
     }
+    if(c == 1) std::cout << "No functions found" << std::endl;
 }
 
-bool Linter::Linter::areFunctionsDefined() const {
+bool Linter::FileLinter::areFunctionsDefined() const {
     bool result = true;
     for (auto& p : functions) {
         result &= p.second;

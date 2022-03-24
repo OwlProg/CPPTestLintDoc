@@ -4,7 +4,7 @@ project(CPPTestLintDoc)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(CPPTestLintDoc main.cpp AutoDoc/AutoDoc.cpp AutoDoc/AutoDoc.h config.yml Utils/Tokenizer.cpp Utils/Tokenizer.h Utils/StringTools.cpp Utils/StringTools.h Utils/ConfigProcessing.cpp Utils/ConfigProcessing.h Utils/Exceptions.cpp Utils/Exceptions.h Linter/Linter.h Linter/Linter.cpp Linter/Tabs.cpp Linter/Tabs.h Linter/LinterRun.cpp)
+add_executable(CPPTestLintDoc main.cpp AutoDoc/AutoDoc.cpp AutoDoc/AutoDoc.h config.yml Utils/Tokenizer.cpp Utils/Tokenizer.h Utils/StringTools.cpp Utils/StringTools.h Utils/ConfigProcessing.cpp Utils/ConfigProcessing.h Utils/Exceptions.cpp Utils/Exceptions.h Linter/FileLinter.h Linter/FileLinter.cpp Linter/Tabs.cpp Linter/Tabs.h Linter/LinterRun.cpp)
 
 # AutoDoc
 add_executable(AutoDoc AutoDoc/RunAutoDoc.cpp AutoDoc/AutoDoc.h AutoDoc/AutoDoc.cpp Utils/ConfigProcessing.h Utils/ConfigProcessing.cpp Utils/Exceptions.h Utils/Exceptions.cpp Utils/Tokenizer.h Utils/Tokenizer.cpp Utils/StringTools.h Utils/StringTools.cpp config.yml)

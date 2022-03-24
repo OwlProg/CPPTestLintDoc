@@ -1,12 +1,12 @@
-#ifndef CPPTESTLINTDOC_LINTER_H
-#define CPPTESTLINTDOC_LINTER_H
+#ifndef CPPTESTLINTDOC_FILELINTER_H
+#define CPPTESTLINTDOC_FILELINTER_H
 
 #include "../Utils/Tokenizer.h"
 #include <ostream>
 
 namespace Linter {
 
-    class Linter {
+    class FileLinter {
         std::vector<CodeParser::Token> tokens;
         std::vector<std::pair<std::string, bool>> variables;
         std::vector<std::pair<std::string, bool>> functions;
@@ -20,9 +20,7 @@ namespace Linter {
 
         void analyseTokens();
     public:
-        explicit Linter(const std::string& filename);
-
-        void printTokens() const;
+        explicit FileLinter(const std::string& filename);
 
         bool areVariablesDefined() const;
         bool areFunctionsDefined() const;
@@ -31,4 +29,4 @@ namespace Linter {
 
 }
 
-#endif //CPPTESTLINTDOC_LINTER_H
+#endif //CPPTESTLINTDOC_FILELINTER_H
