@@ -1,8 +1,9 @@
-#include "Linter/Linter.h"
+#include "Linter/FileLinter.h"
 
-int main() {
-    Linter::Linter l("test.cpp");
-    l.printTokens();
-    l.detailedReport(std::cout);
-    std::cout << l.areVariablesDefined() << std::endl;
-}
+
+//int main() {
+//    FileLinter::FileLinter l("test.cpp");
+//    l.detailedReport(std::cout);
+//    std::cout << l.areVariablesDefined() << std::endl;
+//    std::cout << l.areFunctionsDefined() << std::endl;
+//}

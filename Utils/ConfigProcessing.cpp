@@ -28,6 +28,9 @@ std::string Config::configDataType2string(const Config::ConfigDatatype &configDa
         case ConfigDatatype::REPOSITORY_URL:
             return "RepositoryURL";
 
+        case ConfigDatatype::FILES_FOR_LINTER:
+            return "FilesToLinterCheck";
+
         default:
             return "Unknown";
     }
@@ -190,7 +193,8 @@ std::unordered_map<Config::ConfigDatatype, std::string> Config::processConfig(co
         size_t idx = configContent.find(configDataType2string(datatype));
 
         if (idx != std::string::npos) {
-            if (datatype != Config::ConfigDatatype::FILES_TO_PROCESS_PATHS) {
+            if (datatype != Config::ConfigDatatype::FILES_TO_PROCESS_PATHS
+            && datatype != Config::ConfigDatatype::FILES_FOR_LINTER) {
                 std::string str = (Config::findNextWord(configContent, idx)).first;
                 config[datatype] = str;
                 if (config[datatype][0] == '"' && config[datatype][config[datatype].size() - 1] == '"') {
