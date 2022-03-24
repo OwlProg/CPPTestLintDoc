@@ -9,10 +9,11 @@ namespace Linter {
     class Linter {
         std::vector<CodeParser::Token> tokens;
         std::vector<std::pair<std::string, bool>> variables;
+        std::vector<std::pair<std::string, bool>> functions;
 
-        inline int findVariable(const std::string& needle) {
-            for (int i = 0; i < variables.size(); i++) {
-                if (variables[i].first == needle) return i;
+        inline int find(const std::string& needle, std::vector<std::pair<std::string, bool>>& container) {
+            for (int i = 0; i < container.size(); i++) {
+                if (container[i].first == needle) return i;
             }
             return -1;
         };
@@ -24,6 +25,7 @@ namespace Linter {
         void printTokens() const;
 
         bool areVariablesDefined() const;
+        bool areFunctionsDefined() const;
         void detailedReport(std::ostream& out);
     };
 
