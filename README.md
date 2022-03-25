@@ -26,10 +26,6 @@ Converts all documentation in form of comments in the code into a set of html pa
 >DocumentaionPath:
 >  "%DOCUMENTATION_PATH%"
 >
-># Choose Dark or Light
->Theme:
->  %THEME%
->
 ># You can enumerate files via [*FileName1*, *FileName2*, ...] or using
 ># - *FileName1*
 ># - *FileName2*
@@ -40,6 +36,12 @@ Converts all documentation in form of comments in the code into a set of html pa
 >
 >RepositoryURL:
 >  %REPOSITORY_URL%
+>
+># Put the paths to the files you want to be processed
+># by linter here as a list (via "-" or via "[]")
+>FilesToLinterCheck:
+>  - "%FILE_NAME1%"
+>  - "%FILE_NAME2%"
 >```
 2.Build and run target DocGen. Documentation will be generated in the directory which you specified in config.
 > You can easily use it in GitHub Pages. Just choose a documentation directory as a source in Settings -> Pages.

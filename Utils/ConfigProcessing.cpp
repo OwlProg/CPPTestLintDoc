@@ -19,9 +19,6 @@ std::string Config::configDataType2string(const Config::ConfigDatatype &configDa
         case ConfigDatatype::DOCUMENTATION_PATH:
             return "DocumentationPath";
 
-        case ConfigDatatype::THEME:
-            return "Theme";
-
         case ConfigDatatype::FILES_TO_PROCESS_PATHS:
             return "FilesToProcessPaths";
 
@@ -39,8 +36,7 @@ std::string Config::configDataType2string(const Config::ConfigDatatype &configDa
 std::string Config::readConfig(const std::string &configPath) {
     std::unordered_map<Config::ConfigDatatype, std::string> config;
     std::ifstream file;
-    std::string path = std::string(Constants::config_path);
-    file.open(std::string(Constants::config_path), std::ifstream::in);
+    file.open(configPath, std::ifstream::in);
 
     std::stringstream temp;
     temp << file.rdbuf();

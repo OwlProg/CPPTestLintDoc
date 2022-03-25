@@ -7,11 +7,7 @@
 #pragma region ObjectInfo
 
 DocGen::ObjectInfo::ObjectInfo() {
-    type = ObjectType::UNKNOWN;
-}
-
-void DocGen::ObjectInfo::setType(const ObjectType &_type) {
-    type = _type;
+    info = std::multimap<InfoType, std::string>();
 }
 
 void DocGen::ObjectInfo::setInfo(const InfoType &_type, const std::string &_doc) {
@@ -145,7 +141,9 @@ DocGen::ObjectInfo::ObjectInfo(const std::vector<CodeParser::Token> &code, const
                         code[idx].getToken() != ";") {
                         init.append(" ");
                     }
-                    init.append(code[idx].getToken());
+                    if (code[idx].getToken() != "{") {
+                        init.append(code[idx].getToken());
+                    }
                 }
                 idx++;
             }
@@ -203,7 +201,60 @@ DocGen::ObjectInfo::ObjectInfo(const std::vector<CodeParser::Token> &code, const
             }
             full_name.append(code[i].getToken() + " ");
         }
-
+        if (std::count(full_name.begin(), full_name.end(), '{')) {
+            int balance = 1;
+            full_name.append("\n\t");
+            for (int j = definitionStart; j < codeSize; j++) {
+                if (code[j].getToken() == "{") {
+                    balance++;
+                }
+                else if (code[j].getToken() == "}") {
+                    balance--;
+                }
+                if (code[j].getToken() == "}" && balance == 0) {
+                    break;
+                }
+                else if (code[j].getToken() == "*new_line*" || code[j].getToken() == "\n") {
+                    std::string temp = "\n";
+                    for (int t = 0; t < balance; t++) {
+                        temp.append("\t");
+                    }
+                    full_name.append(temp);
+                }
+                else if (code[j].getToken() == "." || code[j].getToken() == "," || code[j].getToken() == ";" || code[j].getToken() == "(" || code[j].getToken() == ")" ||
+                         code[j].getToken() == "[" || code[j].getToken() == "]" || code[j].getToken() == ":") {
+                    if (full_name[full_name.size() - 1] == ' ') {
+                        full_name.pop_back();
+                    }
+                    full_name.append(code[j].getToken());
+                    if (code[j].getToken() == "," || code[j].getToken() == ")") {
+                        full_name.append(" ");
+                    }
+                }
+                else {
+                    full_name.append(code[j].getToken() + " ");
+                }
+            }
+        }
+        for (size_t i = 1; i < full_name.size(); i++) {
+            if (full_name[i] == '}' && full_name[i - 1] == '\t') {
+                full_name[i - 1] = '}';
+                full_name[i] = '\t';
+            }
+        }
+        while (full_name.find("\tpublic:") != std::string::npos) {
+            StringTools::replaceAll(full_name, "\tpublic:", "public:");
+        }
+        while (full_name.find("\tprivate:") != std::string::npos) {
+            StringTools::replaceAll(full_name, "\t\tprivate:", "private:");
+        }
+        while (full_name.find("\tprotected:") != std::string::npos) {
+            StringTools::replaceAll(full_name, "\tprotected:", "protected:");
+        }
+        full_name.append("};");
+        while (full_name.find("\t};") != std::string::npos) {
+            StringTools::replaceAll(full_name, "\t};", "};");
+        }
         size_t curObjectSize = cur_object_with_info.size();
 
         info.insert(std::make_pair(InfoType::TYPE_OF_OBJECT, code[object_idx].getToken()));
@@ -363,12 +414,17 @@ void DocGen::generateDocumentation(const std::string &configContent) {
                     page.append("<li>\n\t\t<a href=\"" + info.second + ".html" + "\">");
                     std::string heading;
                     for (const auto &another_info: it.second.getInfo()) {
-                        if (another_info.first == DocGen::InfoType::FULL_NAME) {
+                        if (another_info.first == DocGen::InfoType::TYPE_OF_OBJECT) {
+                            heading = another_info.second;
+                        }
+                    }
+                    for (const auto &another_info: it.second.getInfo()) {
+                        if (another_info.first == DocGen::InfoType::SHORT_NAME) {
                             if (another_info.second.empty()) {
-                                heading = info.second + "</a>\n\t\t</li>";
+                                heading += " " + info.second;
                             }
                             else {
-                                heading = another_info.second + "</a>\n\t\t</li>\"";
+                                heading += " " + another_info.second;
                             }
                         }
                     }
@@ -381,44 +437,101 @@ void DocGen::generateDocumentation(const std::string &configContent) {
     }
 
     std::string globalFuncAndVarsPattern = StringTools::readFile(std::string(Constants::globals_path));
+    std::string content = StringTools::readFile(std::string(Constants::content_pattern_path));
+    std::string end = StringTools::readFile(std::string(Constants::end_pattern_path));
     std::string globalFuncAndVarsHtmlPath = DocGen::Documentation::makeHtmlPath(config, "globalFunctionsAndVariables.html");
 
     std::ofstream globalFunctionsAndVariables(globalFuncAndVarsHtmlPath);
 
     page.append(globalFuncAndVarsPattern);
-    StringTools::replaceAll(page, "#pageSubmenu", globalFuncAndVarsHtmlPath);
-    StringTools::replaceAll(page, "%PROJECT_NAME%", config[Config::ConfigDatatype::PROJECT_NAME]);
-    std::string content = StringTools::readFile(std::string(Constants::content_pattern_path));
     page.append(content);
-    std::string end = StringTools::readFile(std::string(Constants::end_pattern_path));
 
-    index << page << content << end;
+    StringTools::replaceAll(page, "%GLOBALS_PAGE%", globalFuncAndVarsHtmlPath);
+    StringTools::replaceAll(page, "%PROJECT_NAME%", config[Config::ConfigDatatype::PROJECT_NAME]);
+    StringTools::replaceAll(page, "%LOGO_PATH%", config[Config::ConfigDatatype::LOGO_PATH]);
+    StringTools::replaceAll(page, "%REPOSITORY_URL%", config[Config::ConfigDatatype::REPOSITORY_URL]);
+
+    index << page << content;
 
     for (auto &it: htmlFiles) {
-        it.first << page << "\t\t\t<br><br>\n\t\t\t<h3>" + it.second + "</h3>\n\t\t\t<pre><code class=\"language-cpp\">";
+        it.first << page << "\t\t\t<br><br>\n\t\t\t<div id=\"heading\"><h3>" + it.second + "</h3></div>\n\t\t\t<pre><code class=\"language-cpp\">";
         for (const auto &info: documentation.getDocumentation()) {
             if (info.first == DocGen::ObjectType::USERTYPE) {
-                for (const auto &info_element: info.second.getInfo()) {
-                    if (info_element.first == DocGen::InfoType::FULL_NAME && !info_element.second.empty()) {
-                        std::string temp_str = info_element.second;
-                        StringTools::replaceAll(temp_str, "<", "&lt;");
-                        StringTools::replaceAll(temp_str, ">", "&gt;");
-                        it.first << temp_str << "</code></pre><br><br><h3>Description</h3>";
-                        break;
+                auto docSource = info.second.getInfo();
+                if (docSource.find(DocGen::InfoType::TYPE_OF_OBJECT)->second + " " + docSource.find(DocGen::InfoType::SHORT_NAME)->second == it.second) {
+                    for (const auto &info_element: info.second.getInfo()) {
+                        if (info_element.first == DocGen::InfoType::FULL_NAME && !info_element.second.empty()) {
+                            std::string temp_str = info_element.second;
+                            StringTools::replaceAll(temp_str, "<", "&lt;");
+                            StringTools::replaceAll(temp_str, ">", "&gt;");
+                            it.first << temp_str << "</code></pre><br><br><div id=\"heading\"><h3>Description</h3></div>";
+                            break;
+                        }
+                    }
+                    for (const auto &info_element: info.second.getInfo()) {
+                        if (info_element.first == DocGen::InfoType::BRIEF && !info_element.second.empty()) {
+                            it.first << "<p>" << info_element.second << "</p>";
+                            break;
+                        }
                     }
                 }
-                for (const auto &info_element: info.second.getInfo()) {
-                    if (info_element.first == DocGen::InfoType::BRIEF && !info_element.second.empty()) {
-                        it.first << "<p>" << info_element.second << "</p>";
-                    }
+                else {
+                    continue;
                 }
             }
         }
         it.first << end;
         it.first.close();
     }
+
+    globalFunctionsAndVariables << page << "\t\t\t<br><br>\n\t\t\t<div id=\"heading\"><h3>Global Functions and Variables</h3></div>" << content;
+
+    int countMembers = 1;
+    for (const auto &info: documentation.getDocumentation()) {
+        if (info.first == DocGen::ObjectType::GLOBAL_VARIABLE_OR_FUNCTION) {
+            auto docSource = info.second.getInfo();
+            if (!docSource.find(DocGen::InfoType::FULL_NAME)->second.empty()) {
+                if (countMembers == 1) {
+                    globalFunctionsAndVariables << "<div id=\"heading\"><h3 style=\"margin-top: -150px\">" + std::to_string(countMembers) + ") " +
+                                                   docSource.find(DocGen::InfoType::TYPE_OF_OBJECT)->second + " " + docSource.find(DocGen::InfoType::SHORT_NAME)->second +
+                                                   "</h3></div>\n\t\t\t<pre><code class=\"language-cpp\">";
+                }
+                else {
+                    globalFunctionsAndVariables
+                            << "<div id=\"heading\"><h3>" + std::to_string(countMembers) + ") " + docSource.find(DocGen::InfoType::TYPE_OF_OBJECT)->second + " " +
+                               docSource.find(DocGen::InfoType::SHORT_NAME)->second + "</h3></div>\n\t\t\t<pre><code class=\"language-cpp\">";
+                }
+                countMembers++;
+                for (const auto &info_element: info.second.getInfo()) {
+                    if (info_element.first == DocGen::InfoType::FULL_NAME && !info_element.second.empty()) {
+                        std::string temp_str = info_element.second;
+                        StringTools::replaceAll(temp_str, "<", "&lt;");
+                        StringTools::replaceAll(temp_str, ">", "&gt;");
+                        globalFunctionsAndVariables << temp_str << "</code></pre><div id=\"heading\"><h3>Description</h3></div>";
+                        break;
+                    }
+                }
+                for (const auto &info_element: info.second.getInfo()) {
+                    if (info_element.first == DocGen::InfoType::BRIEF && !info_element.second.empty()) {
+                        globalFunctionsAndVariables << "<p>" << info_element.second << "</p><br><br>";
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    globalFunctionsAndVariables << end;
+
+    index << "\t\t\t<br><br>\n\t\t\t<div id=\"heading\"><h3 style=\"margin-top: -225px\">" << config[Config::ConfigDatatype::PROJECT_NAME] << "</h3></div>"
+          << "<p>Welcome to the project " << config[Config::ConfigDatatype::PROJECT_NAME] << "!</p>\n<p>You can find the source code <a style=\"color: blue\"href="
+          << config[Config::ConfigDatatype::REPOSITORY_URL] << ">here</a></p>\n"
+          << "<p style=\"margin-top: 425px\">This documentation was automatically genereted by CPPTestLintDoc tool. Follow the <a style=\"color: blue\"href=https://github.com/OwlProg/CPPTestLintDoc>link</a> to find more.</p>\n"
+          << end;
+
     index.close();
     globalFunctionsAndVariables.close();
+
 }
 
 #pragma endregion Documentation
