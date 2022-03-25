@@ -4,25 +4,14 @@ project(CPPTestLintDoc)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(CPPTestLintDoc main.cpp AutoDoc/AutoDoc.cpp AutoDoc/AutoDoc.h config.yml Utils/Tokenizer.cpp Utils/Tokenizer.h Utils/StringTools.cpp Utils/StringTools.h Utils/ConfigProcessing.cpp Utils/ConfigProcessing.h Utils/Exceptions.cpp Utils/Exceptions.h Linter/FileLinter.h Linter/FileLinter.cpp Linter/Tabs.cpp Linter/Tabs.h Linter/LinterRun.cpp)
-
-# AutoDoc
-add_executable(AutoDoc AutoDoc/RunAutoDoc.cpp AutoDoc/AutoDoc.h AutoDoc/AutoDoc.cpp Utils/ConfigProcessing.h Utils/ConfigProcessing.cpp Utils/Exceptions.h Utils/Exceptions.cpp Utils/Tokenizer.h Utils/Tokenizer.cpp Utils/StringTools.h Utils/StringTools.cpp config.yml)
-
-
-# Global test
-#add_executable(main main.cpp AutoDoc/AutoDoc.h AutoDoc/AutoDoc.cpp Utils/ConfigProcessing.h Utils/ConfigProcessing.cpp Utils/Exceptions.h Utils/Exceptions.cpp Utils/Tokenizer.h Utils/Tokenizer.cpp Utils/StringTools.h Utils/StringTools.cpp config.yml)
-
-# Final CMakeLists.txt will look like this:
-#cmake_minimum_required(VERSION 3.17)
-#
-#project(CPPTestLintDoc)
-#
-#set(CMAKE_CXX_STANDARD 17)
-#
 # Add your components here
-#set(SOURCE_FILES AutoDoc/RunAutoDoc.cpp AutoDoc/AutoDoc.cpp Utils/ConfigProcessing.cpp Utils/Exceptions.cpp Utils/Tokenizer.cpp Utils/StringTools.cpp config.yml)
-#set(HEADER_FILES AutoDoc/AutoDoc.h Utils/ConfigProcessing.h Utils/Exceptions.h Utils/Tokenizer.h Utils/StringTools.h)
-#
+set(SOURCE_FILES AutoDoc/RunAutoDoc.cpp AutoDoc/AutoDoc.cpp Utils/ConfigProcessing.cpp Utils/Exceptions.cpp Utils/Tokenizer.cpp Utils/StringTools.cpp config.yml Linter/FileLinter.cpp Linter/Tabs.cpp Linter/LinterRun.cpp Tester/Tester.cpp Tester/math.cpp Tester/math.test.cpp)
+set(HEADER_FILES AutoDoc/AutoDoc.h Utils/ConfigProcessing.h Utils/Exceptions.h Utils/Tokenizer.h Utils/StringTools.h Linter/FileLinter.h Linter/Tabs.h Tester/Tester.h)
+
 # If you have any executable files - add new target this way
-#set(DOCGEN_FILES src/AutoDoc/AutoDoc.h src/Utils/ConfigProcessing.h src/Utils/Exceptions.h src/Utils/Tokenizer.h src/Utils/StringTools.h src/AutoDoc/RunAutoDoc.cpp src/AutoDoc/AutoDoc.cpp src/Utils/ConfigProcessing.cpp src/Utils/Exceptions.cpp src/Utils/Tokenizer.cpp src/Utils/StringTools.cpp src/config.yml PARENT_SCOPE)
+set(DOCGEN_FILES CPPTestLintDoc/AutoDoc/AutoDoc.h CPPTestLintDoc/Utils/ConfigProcessing.h CPPTestLintDoc/Utils/Exceptions.h CPPTestLintDoc/Utils/Tokenizer.h CPPTestLintDoc/Utils/StringTools.h CPPTestLintDoc/AutoDoc/RunAutoDoc.cpp CPPTestLintDoc/AutoDoc/AutoDoc.cpp CPPTestLintDoc/Utils/ConfigProcessing.cpp CPPTestLintDoc/Utils/Exceptions.cpp CPPTestLintDoc/Utils/Tokenizer.cpp CPPTestLintDoc/Utils/StringTools.cpp CPPTestLintDoc/config.yml PARENT_SCOPE)
+
+set(LINTER_FILES CPPTestLintDoc/Linter/FileLinter.h CPPTestLintDoc/Linter/FileLinter.cpp CPPTestLintDoc/Linter/Tabs.h CPPTestLintDoc/Linter/Tabs.cpp CPPTestLintDoc/Linter/LinterRun.cpp CPPTestLintDoc/Utils/ConfigProcessing.h CPPTestLintDoc/Utils/Exceptions.h CPPTestLintDoc/Utils/Tokenizer.h CPPTestLintDoc/Utils/StringTools.h CPPTestLintDoc/Utils/ConfigProcessing.cpp CPPTestLintDoc/Utils/Exceptions.cpp CPPTestLintDoc/Utils/Tokenizer.cpp CPPTestLintDoc/Utils/StringTools.cpp CPPTestLintDoc/config.yml PARENT_SCOPE)
+
+add_library(CPPTestLintDoc STATIC ${HEADER_FILES} ${SOURCE_FILES})
+
