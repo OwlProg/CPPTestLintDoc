@@ -44,15 +44,11 @@ namespace DocGen
     {
     protected:
 
-        ObjectType type;
-
         std::multimap<InfoType, std::string> info;
 
     public:
 
         ObjectInfo();
-
-        void setType(const ObjectType &_type);
 
         void setInfo(const InfoType &_type, const std::string &_doc);
 
@@ -102,13 +98,21 @@ namespace DocGen
 
 namespace Constants
 {
-    inline constexpr std::string_view page_pattern_path = "../src/AutoDoc/DocPatterns/page_pattern.html";
+    inline constexpr std::string_view page_pattern_path = "../CPPTestLintDoc/AutoDoc/DocPatterns/page_pattern.html";
 
-    inline constexpr std::string_view end_pattern_path = "../src/AutoDoc/DocPatterns/end_pattern.html";
+    inline constexpr std::string_view end_pattern_path = "../CPPTestLintDoc/AutoDoc/DocPatterns/end_pattern.html";
 
-    inline constexpr std::string_view globals_path = "../src/AutoDoc/DocPatterns/golbal_f&v.html";
+    inline constexpr std::string_view globals_path = "../CPPTestLintDoc/AutoDoc/DocPatterns/global_f&v.html";
 
-    inline constexpr std::string_view content_pattern_path = "../src/AutoDoc/DocPatterns/content_pattern.html";
+    inline constexpr std::string_view content_pattern_path = "../CPPTestLintDoc/AutoDoc/DocPatterns/content_pattern.html";
+
+    inline constexpr std::string_view light_background_color = "#d0d0d0";
+
+    inline constexpr std::string_view dark_background_color = "#303335";
+
+    inline constexpr std::string_view light_text_color = "#fff";
+
+    inline constexpr std::string_view dark_text_color = "black";
 }
 
 

@@ -18,11 +18,11 @@
 
 namespace Constants {
 
-    constexpr size_t numberOfSpecialYamlSymbols = 8, numberOfConfigDatatypes = 8;
+    constexpr size_t numberOfSpecialYamlSymbols = 8, numberOfConfigDatatypes = 7;
 
     const std::array<char, numberOfSpecialYamlSymbols> specialYamlSymbols = {',', ' ', '\n', '\t', ':', '[', '-'};
 
-    inline constexpr std::string_view config_path = "config.yml";
+    inline constexpr std::string_view config_path = "../CPPTestLintDoc/config.yml";
 
     inline constexpr std::string_view config_arguement_not_found_error_start = "An error was detected during the processing of the config.yaml: ";
 
@@ -39,7 +39,6 @@ namespace Config {
         ROOT_PATH,
         LOGO_PATH,
         DOCUMENTATION_PATH,
-        THEME,
         FILES_TO_PROCESS_PATHS,
         REPOSITORY_URL,
         FILES_FOR_LINTER,
@@ -47,9 +46,8 @@ namespace Config {
     };
 
     constexpr std::array<ConfigDatatype, Constants::numberOfConfigDatatypes> configDatatypes = {ConfigDatatype::PROJECT_NAME, ConfigDatatype::ROOT_PATH, ConfigDatatype::LOGO_PATH,
-                                                                                                ConfigDatatype::FILES_TO_PROCESS_PATHS, ConfigDatatype::THEME,
-                                                                                                ConfigDatatype::DOCUMENTATION_PATH, ConfigDatatype::REPOSITORY_URL,
-                                                                                                ConfigDatatype::FILES_FOR_LINTER};
+                                                                                                ConfigDatatype::FILES_TO_PROCESS_PATHS, ConfigDatatype::DOCUMENTATION_PATH,
+                                                                                                ConfigDatatype::REPOSITORY_URL, ConfigDatatype::FILES_FOR_LINTER};
 
     std::string configDataType2string(const ConfigDatatype &configDatatype);
 

@@ -10,9 +10,6 @@ LogoPath:
 DocumentationPath:
   "%DOCUMENTATION_PATH%"
 
-Theme:
-  %THEME%
-
 FilesToProcessPaths:
   - "%FILE_NAME%"
 
