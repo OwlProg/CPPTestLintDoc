@@ -7,9 +7,18 @@
 
 #include <iostream>
 #include <cmath>
+#include <vector>
+#include <map>
+#include <ctime>
 
 class Tester {
     private:
+        int countPasses = 0;
+        int countWarnings = 0;
+        int countErrors = 0;
+        unsigned int timeRun = 0;
+
+
         enum class UnitResult {
             PASS,
             WARNING,
@@ -48,25 +57,39 @@ class Tester {
             return (std::is_same<T, std::string>::value);
         }
 
+        template <class T> bool isContainerClass() {
+            return (std::is_same<T, std::vector<typename T::value_type>>::value);
+        }
+
         template <typename T> void printUnitResult(UnitResult status, T result = T(), T expectedResult = T()) {
             switch(status) {
                 case UnitResult::PASS:
                     std::cout << "PASS";
+                    countPasses += 1;
                     break;
                 case UnitResult::WARNING:
                     std::cout << "WARNING ";
+                    countWarnings += 1;
                     if (isRealType<T>()) {
                         std::cout << "Expected: " << expectedResult << "\t" << "Received: " << result << "\n";
+                    } else if (isContainerClass<T>()) {
+                        std::cout << "Container is empty\n";
                     }
                     break;
                 case UnitResult::ERROR:
                     std::cout << "ERROR ";
-                    std::cout << "Expected: " << expectedResult << "\t" << "Received: " << result << "\n";
+                    countErrors += 1;
+                    if (isContainerClass<T>()) {
+                        std::cout << "Value " << result << "is not in container\n";
+                    } else {
+                        std::cout << "Expected: " << expectedResult << "\t" << "Received: " << result << "\n";
+                    }
+
                     break;
             }
         }
 
-        template <typename T> void checkWithoutWarning(T* result, T* expectedResult) {
+        template <typename T> void testEqualWithoutWarning(T result, T expectedResult) {
             if (result == expectedResult) {
                 printUnitResult<T>(UnitResult::PASS);
             }
@@ -76,6 +99,22 @@ class Tester {
         }
 
     public:
+        /*
+         * General
+         */
+        Tester() {
+            srand(time(0));
+            timeRun = clock();
+        }
+
+        void printStat() {
+            std::cout << "The testing system was completed in " << timeRun / 1000.0 <<  " seconds\n";
+            std::cout << "Count of PASS: " << countPasses <<  "\n";
+            std::cout << "Count of WARN: " << countWarnings <<  "\n";
+            std::cout << "Count of ERROR: " << countErrors <<  "\n";
+        }
+
+
 
         /*
          * Truthiness methods
@@ -93,24 +132,53 @@ class Tester {
                     printUnitResult(UnitResult::ERROR, result, expectedResult);
                 }
             } else if (isIntegerType<T>()) {
-                checkWithoutWarning(result, expectedResult);
+                testEqualWithoutWarning(result, expectedResult);
             } else if (isStringType<T>()) {
-                checkWithoutWarning(result, expectedResult);
+                testEqualWithoutWarning(result, expectedResult);
             } else if (isBoolType<T>()) {
-                checkWithoutWarning(result, expectedResult);
+                testEqualWithoutWarning(result, expectedResult);
             } else if (isNullType<T>()) {
-                checkWithoutWarning(result, expectedResult);
+                testEqualWithoutWarning(result, expectedResult);
             }
         }
 
-//        template <typename T> void ToCompare(std::string sign, T result, T expectedResult, double EPS = 1e-4) {
-//            switch (sign) {
-//                case "==":
-//
-//                    break;
-//                default:
-//            }
-//        }
+        template <typename T> void ToCompare(std::string sign, T result, T expectedResult, double EPS = 1e-4) {
+            if (sign == "==" || sign == "=") {
+                ToEqual(result, expectedResult, EPS);
+            } else if (sign == ">=") {
+                if (result >= expectedResult) {
+                    printUnitResult<T>(UnitResult::PASS);
+                } else {
+                    printUnitResult(UnitResult::ERROR, result, expectedResult);
+                }
+            } else if (sign == ">") {
+                if (result > expectedResult) {
+                    printUnitResult<T>(UnitResult::PASS);
+                } else {
+                    printUnitResult(UnitResult::ERROR, result, expectedResult);
+                }
+            } else if (sign == "<=") {
+                if (result <= expectedResult) {
+                    printUnitResult<T>(UnitResult::PASS);
+                } else {
+                    printUnitResult(UnitResult::ERROR, result, expectedResult);
+                }
+            } else if (sign == "<") {
+                if (result < expectedResult) {
+                    printUnitResult<T>(UnitResult::PASS);
+                } else {
+                    printUnitResult(UnitResult::ERROR, result, expectedResult);
+                }
+            }
+        }
+
+        void ToMatch(std::string str, std::string substr) {
+            size_t pos = str.find(substr);
+            if (pos != std::string::npos)
+                printUnitResult<std::string>(UnitResult::PASS);
+            else
+                printUnitResult<std::string>(UnitResult::ERROR);
+        }
 
 };
 
