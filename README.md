@@ -6,6 +6,7 @@
 >```CMake
 >add_subdirectory(CPPTestLintDoc)
 >add_executable(DocGen ${DOCGEN_FILES})
+>add_executable(Linter ${LINTER_FILES})
 >```
 ### Usage
 #### Autodocumentation
